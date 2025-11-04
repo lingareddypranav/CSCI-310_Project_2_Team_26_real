@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/auth_graph"
     app:startDestination="@id/loginRegisterFragment">
 
     <fragment
         android:id="@+id/loginRegisterFragment"
         android:name="com.example.csci_310project2team26.ui.auth.LoginRegisterFragment"
-        android:label="Login / Register" />
+        android:label="Login / Register"
+        tools:layout="@layout/fragment_login_register"/>
 
     <fragment
         android:id="@+id/profileCreateFragment"
         android:name="com.example.csci_310project2team26.ui.create_profile.ProfileCreateFragment"
-        android:label="Create profile" />
+        android:label="Create profile"
+        tools:layout="@layout/fragment_profile_create" />
 
 </navigation>
