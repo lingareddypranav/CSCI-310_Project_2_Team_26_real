@@ -23,11 +23,9 @@ Node.js + Express + PostgreSQL REST API for the BestLLM Android application.
    # Edit .env with your configuration
    ```
 
-3. **Setup database:**
-   - See `database/README.md` for detailed database setup instructions
-   - Run `database/schema.sql` to create tables
-
-4. **Start the server:**
+3. **Start the server:**
+   - Database migrations run automatically on server startup
+   - No manual database setup needed!
    ```bash
    # Development (with auto-reload)
    npm run dev
@@ -53,6 +51,7 @@ backend/
 ├── database/
 │   ├── schema.sql           # Database schema
 │   ├── seed.sql             # Seed data
+│   ├── autoMigrate.js       # Auto-migration on startup
 │   └── README.md            # Database setup guide
 ├── middleware/
 │   └── auth.js              # JWT authentication
@@ -121,19 +120,16 @@ Authorization: Bearer <your_jwt_token>
    - Add PostgreSQL database service
 
 2. **Set environment variables:**
-   - `DATABASE_URL` - (Auto-set by Railway for PostgreSQL)
-   - `JWT_SECRET` - Generate a strong random string
-   - `PORT` - Railway will set this automatically
-   - `NODE_ENV` - Set to `production`
+   - See `RAILWAY_ENV_VARS.md` for detailed instructions
+   - **Required:** `JWT_SECRET` (generate: `openssl rand -base64 32`)
+   - **Recommended:** `NODE_ENV=production`
+   - **Auto-set by Railway:** `DATABASE_URL`, `PORT` (no action needed)
 
 3. **Deploy:**
    - Connect your GitHub repository
    - Railway will auto-deploy on push
-   - Or use Railway CLI: `railway up`
-
-4. **Run database migrations:**
-   - Use Railway's PostgreSQL dashboard to run `database/schema.sql`
-   - Or create a migration script
+   - **Database migrations run automatically on server startup!**
+   - No manual database setup needed
 
 ## 📝 Environment Variables
 
@@ -149,8 +145,12 @@ DB_NAME=bestllm_db
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Or use Railway's DATABASE_URL (recommended)
+# Or use Railway's DATABASE_URL (recommended for Railway)
 DATABASE_URL=postgresql://user:password@host:port/database
+
+# Auto-Migration (enabled by default)
+# Set DISABLE_AUTO_MIGRATE=true to disable automatic migrations
+# DISABLE_AUTO_MIGRATE=false
 
 # JWT
 JWT_SECRET=your_super_secret_key
@@ -172,6 +172,17 @@ curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"John Doe","email":"john@usc.edu","student_id":"1234567890","password":"password123"}'
 ```
+
+## 🔄 Auto-Migration
+
+The backend automatically runs database migrations on every server startup:
+
+- **First deployment:** Creates all database tables automatically
+- **Subsequent deployments:** Checks if tables exist and skips if already created
+- **Safe:** Idempotent - can run multiple times without issues
+- **Disable:** Set `DISABLE_AUTO_MIGRATE=true` environment variable
+
+No manual database setup needed! Just deploy and the database will be ready.
 
 ## 📚 Documentation
 

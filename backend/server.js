@@ -10,6 +10,9 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+// Import database auto-migration
+const { autoMigrate } = require('./database/autoMigrate');
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
@@ -67,11 +70,33 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 BestLLM API server running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+// Start server with auto-migration
+async function startServer() {
+  // Run database migrations automatically on startup
+  // This is safe to run on every deployment - it checks if tables exist first
+  if (process.env.DISABLE_AUTO_MIGRATE !== 'true') {
+    try {
+      await autoMigrate();
+    } catch (error) {
+      console.error('⚠️  Migration warning (server will continue):', error.message);
+      // Continue even if migration fails - might be a temporary connection issue
+    }
+  } else {
+    console.log('⚠️  Auto-migration disabled (DISABLE_AUTO_MIGRATE=true)');
+  }
+
+  // Start the server
+  app.listen(PORT, () => {
+    console.log(`🚀 BestLLM API server running on port ${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  });
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });
 
 module.exports = app;

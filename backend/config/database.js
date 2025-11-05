@@ -22,8 +22,12 @@ const pool = new Pool({
 });
 
 // Test database connection
+let connectionTested = false;
 pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
+  if (!connectionTested) {
+    console.log('✅ Connected to PostgreSQL database');
+    connectionTested = true;
+  }
 });
 
 pool.on('error', (err) => {
@@ -37,10 +41,13 @@ const query = async (text, params) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
+    // Only log slow queries in development
+    if (process.env.NODE_ENV === 'development' || duration > 1000) {
+      console.log(`Query executed (${duration}ms): ${text.substring(0, 100)}...`);
+    }
     return res;
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error('Database query error:', error.message);
     throw error;
   }
 };

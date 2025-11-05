@@ -22,7 +22,7 @@ import retrofit2.http.Path;
  */
 public interface ApiService {
     
-    String BASE_URL = "https://api.bestllm.com/"; // Replace with actual backend URL
+    String BASE_URL = "csci-310project2team26-production.up.railway.app"; // Replace with actual backend URL
     
     // Authentication endpoints
     @POST("api/auth/register")
