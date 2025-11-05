@@ -58,7 +58,9 @@ public class ProfileRepository {
                 }
                 
                 // Create profile
+                String token = SessionManager.getToken();
                 Call<Void> call = apiService.createProfile(
+                    token != null ? ("Bearer " + token) : null,
                     userId,
                     affiliation,
                     birthDate,
@@ -146,7 +148,9 @@ public class ProfileRepository {
                 }
                 
                 // Update profile
+                String token = SessionManager.getToken();
                 Call<Void> call = apiService.updateProfile(
+                    token != null ? ("Bearer " + token) : null,
                     userId,
                     birthDate,
                     bio,
@@ -178,7 +182,13 @@ public class ProfileRepository {
                              String newPassword, Callback<Void> callback) {
         executorService.execute(() -> {
             try {
-                Call<Void> call = apiService.resetPassword(userId, currentPassword, newPassword);
+                String token = SessionManager.getToken();
+                Call<Void> call = apiService.resetPassword(
+                    token != null ? ("Bearer " + token) : null,
+                    userId,
+                    currentPassword,
+                    newPassword
+                );
                 Response<Void> response = call.execute();
                 
                 if (response.isSuccessful()) {

@@ -158,17 +158,16 @@ public class AuthRepository {
     
     // Session management helpers
     private void saveSession(User user, String token) {
-        // Implementation would save to SharedPreferences or secure storage
-        // For now, this is a placeholder
+        // Minimal in-memory session storage (can be extended to SharedPreferences)
+        SessionManager.setSession(token, user.getId());
     }
     
     private String getSavedToken() {
-        // Implementation would retrieve from SharedPreferences
-        return null;
+        return SessionManager.getToken();
     }
     
     private void clearSession() {
-        // Implementation would clear SharedPreferences
+        SessionManager.clear();
     }
     
     /**
