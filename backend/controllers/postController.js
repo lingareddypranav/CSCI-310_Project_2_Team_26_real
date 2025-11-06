@@ -326,11 +326,36 @@ const createPost = async (req, res) => {
     }
 
     // Insert post
-    const result = await query(
+    const insertResult = await query(
       `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, author_id, title, content, llm_tag, is_prompt_post, created_at, updated_at`,
+       RETURNING id`,
       [authorId, title, content, llm_tag, is_prompt_post || false]
+    );
+
+    const postId = insertResult.rows[0].id;
+
+    // Fetch full post data with author_name, vote counts, and comment count
+    const result = await query(
+      `SELECT 
+        p.id,
+        p.author_id,
+        u.name as author_name,
+        p.title,
+        p.content,
+        p.llm_tag,
+        p.is_prompt_post,
+        p.created_at,
+        p.updated_at,
+        COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count
+      FROM posts p
+      LEFT JOIN users u ON p.author_id = u.id
+      LEFT JOIN votes v ON v.post_id = p.id
+      WHERE p.id = $1
+      GROUP BY p.id, u.name`,
+      [postId]
     );
 
     res.status(201).json({

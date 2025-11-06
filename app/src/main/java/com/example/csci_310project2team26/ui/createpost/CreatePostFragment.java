@@ -67,6 +67,12 @@ public class CreatePostFragment extends Fragment {
         if (post == null) {
             return;
         }
+        String postId = post.getId();
+        if (postId == null || postId.isEmpty()) {
+            Toast.makeText(requireContext(), "Post created but unable to navigate", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         Toast.makeText(requireContext(), R.string.create_post_success, Toast.LENGTH_SHORT).show();
         binding.titleEditText.setText("");
         binding.bodyEditText.setText("");
@@ -74,7 +80,7 @@ public class CreatePostFragment extends Fragment {
         binding.promptSwitch.setChecked(false);
 
         Bundle args = new Bundle();
-        args.putString("postId", post.getId());
+        args.putString("postId", postId);
         Navigation.findNavController(binding.getRoot()).navigate(R.id.postDetailFragment, args);
     }
 
