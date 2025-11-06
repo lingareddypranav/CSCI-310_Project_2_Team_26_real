@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.csci_310project2team26.data.model.Comment;
 import com.example.csci_310project2team26.data.repository.CommentRepository;
-import com.example.csci_310project2team26.data.network.ApiService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,17 +32,18 @@ public class CommentsViewModel extends ViewModel {
     public void loadComments(String postId) {
         loading.postValue(true);
         error.postValue(null);
-        commentRepository.fetchComments(postId, new CommentRepository.Callback<ApiService.CommentsResponse>() {
+        commentRepository.fetchComments(postId, new CommentRepository.Callback<CommentRepository.CommentsResult>() {
             @Override
-            public void onSuccess(ApiService.CommentsResponse result) {
+            public void onSuccess(CommentRepository.CommentsResult result) {
                 loading.postValue(false);
-                comments.postValue(result.comments != null ? result.comments : new ArrayList<>());
+                comments.postValue(result.getComments() != null ? result.getComments() : new ArrayList<>());
             }
 
             @Override
             public void onError(String err) {
                 loading.postValue(false);
                 error.postValue(err);
+                comments.postValue(new ArrayList<>());
             }
         });
     }
@@ -59,7 +59,11 @@ public class CommentsViewModel extends ViewModel {
                 loading.postValue(false);
                 postingComment.postValue(false);
                 List<Comment> current = comments.getValue();
-                if (current == null) current = new ArrayList<>();
+                if (current == null) {
+                    current = new ArrayList<>();
+                } else {
+                    current = new ArrayList<>(current);
+                }
                 current.add(0, result);
                 comments.postValue(current);
                 latestPostedComment.postValue(result);
@@ -69,6 +73,33 @@ public class CommentsViewModel extends ViewModel {
             public void onError(String err) {
                 loading.postValue(false);
                 postingComment.postValue(false);
+                error.postValue(err);
+            }
+        });
+    }
+
+    public void voteOnComment(String postId, String commentId, String type) {
+        commentRepository.voteOnComment(postId, commentId, type, new CommentRepository.Callback<CommentRepository.VoteResult>() {
+            @Override
+            public void onSuccess(CommentRepository.VoteResult result) {
+                List<Comment> current = comments.getValue();
+                if (current == null) {
+                    current = new ArrayList<>();
+                } else {
+                    current = new ArrayList<>(current);
+                }
+                for (int i = 0; i < current.size(); i++) {
+                    Comment item = current.get(i);
+                    if (item.getId().equals(result.getComment().getId())) {
+                        current.set(i, result.getComment());
+                        break;
+                    }
+                }
+                comments.postValue(current);
+            }
+
+            @Override
+            public void onError(String err) {
                 error.postValue(err);
             }
         });

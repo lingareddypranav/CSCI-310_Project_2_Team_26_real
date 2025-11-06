@@ -46,6 +46,11 @@ public class PostDetailFragment extends Fragment {
         postRepository = new PostRepository();
 
         commentsAdapter = new CommentsAdapter();
+        commentsAdapter.setOnCommentVoteListener((comment, type) -> {
+            if (postId != null && comment != null) {
+                commentsViewModel.voteOnComment(postId, comment.getId(), type);
+            }
+        });
         binding.commentsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.commentsRecyclerView.setAdapter(commentsAdapter);
 
@@ -66,7 +71,11 @@ public class PostDetailFragment extends Fragment {
     }
 
     private void observeViewModel() {
-        commentsViewModel.getComments().observe(getViewLifecycleOwner(), list -> commentsAdapter.submitList(list));
+        commentsViewModel.getComments().observe(getViewLifecycleOwner(), list -> {
+            commentsAdapter.submitList(list);
+            displayedCommentCount = list != null ? list.size() : 0;
+            updateCommentCountText(displayedCommentCount);
+        });
         commentsViewModel.getError().observe(getViewLifecycleOwner(), err -> {
             if (err != null) Toast.makeText(requireContext(), err, Toast.LENGTH_LONG).show();
         });
@@ -78,8 +87,6 @@ public class PostDetailFragment extends Fragment {
         commentsViewModel.getLatestPostedComment().observe(getViewLifecycleOwner(), comment -> {
             if (comment == null) return;
             binding.commentEditText.setText("");
-            displayedCommentCount = Math.max(0, displayedCommentCount) + 1;
-            updateCommentCountText(displayedCommentCount);
             binding.commentsRecyclerView.scrollToPosition(0);
         });
     }
