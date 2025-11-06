@@ -65,7 +65,7 @@ public class SearchFragment extends Fragment {
             new android.app.AlertDialog.Builder(requireContext())
                     .setTitle(R.string.delete_post_confirm_title)
                     .setMessage(R.string.delete_post_confirm_message)
-                    .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    .setPositiveButton(R.string.delete_post, (dialog, which) -> {
                         PostRepository postRepository = new PostRepository();
                         postRepository.deletePost(postId, new PostRepository.Callback<Void>() {
                             @Override
