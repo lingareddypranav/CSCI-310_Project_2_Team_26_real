@@ -140,11 +140,18 @@ public class PostRepository {
                             Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                // For prompt_tag search type, don't pass is_prompt_post as it's handled by the search_type
+                Boolean promptFilter = null;
+                if (searchType != null && !"prompt_tag".equals(searchType) && isPromptPost != null) {
+                    promptFilter = isPromptPost;
+                }
+                
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.searchPosts(
                     query,
                     searchType != null ? searchType : "full_text",
                     limit != null ? limit : 50,
-                    offset != null ? offset : 0
+                    offset != null ? offset : 0,
+                    promptFilter
                 );
                 
                 Response<ApiService.PostsResponse> response = call.execute();
@@ -154,17 +161,6 @@ public class PostRepository {
                     List<Post> posts = postsResponse.posts != null ? postsResponse.posts : new ArrayList<>();
                     int count = postsResponse.count;
                     
-                    // Filter by prompt post type if specified
-                    if (isPromptPost != null) {
-                        List<Post> filtered = new ArrayList<>();
-                        for (Post post : posts) {
-                            if (post.isIs_prompt_post() == isPromptPost) {
-                                filtered.add(post);
-                            }
-                        }
-                        posts = filtered;
-                    }
-                    
                     callback.onSuccess(new PostsResult(
                         posts,
                         count,
@@ -172,7 +168,11 @@ public class PostRepository {
                         offset != null ? offset : 0
                     ));
                 } else {
-                    callback.onError("Failed to search posts");
+                    String errorMsg = "Failed to search posts";
+                    if (response.code() == 400) {
+                        errorMsg = "Invalid search query";
+                    }
+                    callback.onError(errorMsg);
                 }
             } catch (Exception e) {
                 callback.onError(e.getMessage() != null ? e.getMessage() : "Network error");

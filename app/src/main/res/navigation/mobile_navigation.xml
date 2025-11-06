@@ -63,4 +63,24 @@
         android:name="com.example.csci_310project2team26.ui.editcomment.EditCommentFragment"
         android:label="@string/title_edit_comment"
         tools:layout="@layout/fragment_edit_comment" />
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.csci_310project2team26.ui.search.SearchFragment"
+        android:label="@string/search_title"
+        tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_searchFragment_to_postDetailFragment"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/trendingPostsFragment"
+        android:name="com.example.csci_310project2team26.ui.trending.TrendingPostsFragment"
+        android:label="@string/trending_posts_title"
+        tools:layout="@layout/fragment_trending_posts">
+        <action
+            android:id="@+id/action_trendingPostsFragment_to_postDetailFragment"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
 </navigation>

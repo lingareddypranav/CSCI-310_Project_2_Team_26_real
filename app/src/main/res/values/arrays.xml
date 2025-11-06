@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="post_sort_options">
-        <item>@string/sort_option_newest</item>
-        <item>@string/sort_option_top</item>
-    </string-array>
+    <array name="search_types">
+        <item>@string/search_type_full_text</item>
+        <item>@string/search_type_tag</item>
+        <item>@string/search_type_author</item>
+        <item>@string/search_type_title</item>
+        <item>@string/search_type_prompt_tag</item>
+    </array>
 </resources>

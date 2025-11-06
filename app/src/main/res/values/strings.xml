@@ -134,6 +134,20 @@
     <string name="user_activity_post_label">Post</string>
     <string name="user_activity_comment_label">Comment</string>
     <string name="title_create_post_nav">Create</string>
+    
+    <!-- Search -->
+    <string name="search_title">Search Posts</string>
+    <string name="search_query_hint">Enter search keyword</string>
+    <string name="search_type_label">Search by:</string>
+    <string name="search_type_tag">Tag</string>
+    <string name="search_type_author">Author</string>
+    <string name="search_type_title">Title</string>
+    <string name="search_type_full_text">Full Text</string>
+    <string name="search_type_prompt_tag">Prompt Tag</string>
+    
+    <!-- Trending -->
+    <string name="trending_posts_title">Trending Posts</string>
+    <string name="refresh">Refresh</string>
 
     <!-- Home feed -->
     <string name="search_posts_hint">Search posts</string>

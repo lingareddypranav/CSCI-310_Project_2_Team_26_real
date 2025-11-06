@@ -119,7 +119,8 @@ public interface ApiService {
         @Query("q") String query,
         @Query("search_type") String searchType,
         @Query("limit") Integer limit,
-        @Query("offset") Integer offset
+        @Query("offset") Integer offset,
+        @Query("is_prompt_post") Boolean isPromptPost
     );
 
     @GET("api/posts/{id}")

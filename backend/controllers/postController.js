@@ -190,7 +190,7 @@ const getTrendingPosts = async (req, res) => {
 // Search posts
 const searchPosts = async (req, res) => {
   try {
-    const { q, search_type = 'full_text', limit = 50, offset = 0 } = req.query;
+    const { q, search_type = 'full_text', limit = 50, offset = 0, is_prompt_post } = req.query;
 
     if (!q || q.trim().length === 0) {
       return res.status(400).json({
@@ -228,6 +228,11 @@ const searchPosts = async (req, res) => {
         queryText += ` p.llm_tag ILIKE $${paramCount++}`;
         params.push(`%${q}%`);
         break;
+      case 'prompt_tag':
+        // Search for prompts with specific tag
+        queryText += ` p.llm_tag ILIKE $${paramCount++} AND p.is_prompt_post = TRUE`;
+        params.push(`%${q}%`);
+        break;
       case 'author':
         queryText += ` u.name ILIKE $${paramCount++}`;
         params.push(`%${q}%`);
@@ -241,6 +246,12 @@ const searchPosts = async (req, res) => {
         queryText += ` (p.title ILIKE $${paramCount} OR p.content ILIKE $${paramCount++})`;
         params.push(`%${q}%`);
         break;
+    }
+
+    // Add is_prompt_post filter if specified (and not already handled by prompt_tag)
+    if (search_type !== 'prompt_tag' && is_prompt_post !== undefined) {
+      queryText += ` AND p.is_prompt_post = $${paramCount++}`;
+      params.push(is_prompt_post === 'true' || is_prompt_post === true);
     }
 
     queryText += ` GROUP BY p.id, u.name ORDER BY p.created_at DESC`;

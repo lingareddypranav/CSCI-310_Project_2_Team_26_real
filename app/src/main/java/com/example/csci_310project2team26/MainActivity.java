@@ -63,11 +63,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_profile_settings) {
-            if (navController != null) {
-                navController.navigate(R.id.profileSettingsFragment);
-                return true;
-            }
+        if (navController == null) {
+            return super.onOptionsItemSelected(item);
+        }
+        
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_profile_settings) {
+            navController.navigate(R.id.profileSettingsFragment);
+            return true;
+        } else if (itemId == R.id.action_search) {
+            navController.navigate(R.id.searchFragment);
+            return true;
+        } else if (itemId == R.id.action_trending) {
+            navController.navigate(R.id.trendingPostsFragment);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

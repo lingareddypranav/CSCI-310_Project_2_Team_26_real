@@ -3,6 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_search"
+        android:title="@string/search_title"
+        app:showAsAction="ifRoom" />
+    
+    <item
+        android:id="@+id/action_trending"
+        android:title="@string/trending_posts_title"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_profile_settings"
         android:icon="@drawable/ic_person"
         android:title="@string/menu_profile_settings"
