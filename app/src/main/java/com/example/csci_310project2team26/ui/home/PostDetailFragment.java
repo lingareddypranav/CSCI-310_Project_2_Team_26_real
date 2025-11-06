@@ -18,18 +18,26 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
+import com.example.csci_310project2team26.data.repository.PostRepository;
+import com.example.csci_310project2team26.data.repository.SessionManager;
 import com.example.csci_310project2team26.databinding.FragmentPostDetailBinding;
 import com.example.csci_310project2team26.viewmodel.CommentsViewModel;
 import com.example.csci_310project2team26.viewmodel.PostDetailViewModel;
 
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class PostDetailFragment extends Fragment {
 
     private FragmentPostDetailBinding binding;
     private CommentsViewModel commentsViewModel;
     private PostDetailViewModel postDetailViewModel;
+    private PostRepository postRepository;
     private CommentsAdapter commentsAdapter;
     private String postId;
     private int displayedCommentCount = 0;
@@ -46,6 +54,7 @@ public class PostDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         commentsViewModel = new ViewModelProvider(this).get(CommentsViewModel.class);
         postDetailViewModel = new ViewModelProvider(this).get(PostDetailViewModel.class);
+        postRepository = new PostRepository();
 
         commentsAdapter = new CommentsAdapter();
         commentsAdapter.setOnCommentVoteListener((comment, type) -> {
@@ -148,6 +157,26 @@ public class PostDetailFragment extends Fragment {
         binding.tagTextView.setText(tagLabel);
         binding.authorTextView.setText(resources.getString(R.string.post_author_format, author));
 
+        // Format and display date
+        if (binding.dateTextView != null) {
+            String dateText = formatDate(post.getCreated_at(), resources);
+            binding.dateTextView.setText(dateText);
+        }
+
+        // Show delete button only for own posts
+        String currentUserId = SessionManager.getUserId();
+        boolean isOwnPost = currentUserId != null && post.getAuthor_id() != null 
+                && currentUserId.equals(post.getAuthor_id());
+        
+        if (binding.deletePostButton != null) {
+            if (isOwnPost) {
+                binding.deletePostButton.setVisibility(View.VISIBLE);
+                binding.deletePostButton.setOnClickListener(v -> deletePost());
+            } else {
+                binding.deletePostButton.setVisibility(View.GONE);
+            }
+        }
+
         NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
         int upvotes = Math.max(post.getUpvotes(), 0);
         int downvotes = Math.max(post.getDownvotes(), 0);
@@ -221,5 +250,106 @@ public class PostDetailFragment extends Fragment {
                 numberFormat.format(commentCount)
         );
         binding.commentCountTextView.setText(commentsText);
+    }
+
+    private String formatDate(String dateString, Resources resources) {
+        if (dateString == null || dateString.isEmpty()) {
+            return "";
+        }
+
+        // PostgreSQL TIMESTAMP returns ISO 8601 format
+        // Try multiple formats: with milliseconds, without, with timezone, without
+        String[] formats = {
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",  // With milliseconds and Z
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",     // With milliseconds and timezone
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",      // With milliseconds, no timezone
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",      // Without milliseconds, with Z
+            "yyyy-MM-dd'T'HH:mm:ssZ",         // Without milliseconds, with timezone
+            "yyyy-MM-dd'T'HH:mm:ss",          // Without milliseconds, no timezone
+            "yyyy-MM-dd HH:mm:ss"             // Space separator (fallback)
+        };
+
+        for (String formatStr : formats) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat(formatStr, Locale.getDefault());
+                // Set timezone to UTC for parsing
+                format.setTimeZone(TimeZone.getTimeZone("UTC"));
+                Date date = format.parse(dateString);
+                if (date != null) {
+                    return formatRelativeTime(date, resources);
+                }
+            } catch (ParseException e) {
+                // Try next format
+                continue;
+            }
+        }
+
+        // If all parsing fails, return formatted original string
+        return dateString.length() > 10 ? dateString.substring(0, 10) : dateString;
+    }
+
+    private String formatRelativeTime(Date date, Resources resources) {
+        long now = System.currentTimeMillis();
+        long diff = now - date.getTime();
+        long days = TimeUnit.MILLISECONDS.toDays(diff);
+        long hours = TimeUnit.MILLISECONDS.toHours(diff);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+
+        if (days > 0) {
+            if (days == 1) {
+                return resources.getString(R.string.post_date_yesterday);
+            } else if (days < 7) {
+                return resources.getString(R.string.post_date_days_ago, (int)days);
+            } else {
+                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                return displayFormat.format(date);
+            }
+        } else if (hours > 0) {
+            return resources.getString(R.string.post_date_hours_ago, (int)hours);
+        } else if (minutes > 0) {
+            return resources.getString(R.string.post_date_minutes_ago, (int)minutes);
+        } else {
+            return resources.getString(R.string.post_date_just_now);
+        }
+    }
+
+    private void deletePost() {
+        if (postId == null || binding == null || getContext() == null) return;
+
+        // Show confirmation dialog
+        new android.app.AlertDialog.Builder(getContext())
+                .setTitle(R.string.delete_post_confirm_title)
+                .setMessage(R.string.delete_post_confirm_message)
+                .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    postRepository.deletePost(postId, new PostRepository.Callback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(), R.string.delete_post_success, Toast.LENGTH_SHORT).show();
+                                    }
+                                    // Navigate back
+                                    if (getActivity() != null) {
+                                        getActivity().onBackPressed();
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(), error != null ? error : getString(R.string.delete_post_error), Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            }
+                        }
+                    });
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 }

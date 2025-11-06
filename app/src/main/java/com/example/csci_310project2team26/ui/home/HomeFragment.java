@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
+import com.example.csci_310project2team26.data.repository.PostRepository;
 import com.example.csci_310project2team26.databinding.FragmentHomeBinding;
 import com.example.csci_310project2team26.viewmodel.PostsViewModel;
 
@@ -40,6 +41,44 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
 
         postsAdapter = new PostsAdapter(this::onPostClicked);
+        postsAdapter.setOnPostDeletedListener(postId -> {
+            // Show confirmation dialog
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.delete_post_confirm_title)
+                    .setMessage(R.string.delete_post_confirm_message)
+                    .setPositiveButton(R.string.delete, (dialog, which) -> {
+                        PostRepository postRepository = new PostRepository();
+                        postRepository.deletePost(postId, new PostRepository.Callback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                if (getActivity() != null) {
+                                    getActivity().runOnUiThread(() -> {
+                                        Toast.makeText(requireContext(), R.string.delete_post_success, Toast.LENGTH_SHORT).show();
+                                        // Reload posts after deletion
+                                        postsViewModel.loadPosts(
+                                                postsViewModel.getCurrentSort(),
+                                                postsViewModel.getCurrentQuery(),
+                                                resolveLimit(),
+                                                resolveOffset(),
+                                                false  // Normal posts
+                                        );
+                                    });
+                                }
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                if (getActivity() != null) {
+                                    getActivity().runOnUiThread(() -> {
+                                        Toast.makeText(requireContext(), error != null ? error : getString(R.string.delete_post_error), Toast.LENGTH_LONG).show();
+                                    });
+                                }
+                            }
+                        });
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+        });
         binding.postsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.postsRecyclerView.setAdapter(postsAdapter);
 
