@@ -66,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 //            TEMPORARY CHANGE TO GET TO MAIN PAGE
-            navigateToMainApp();
+//            navigateToMainApp();
 
 
 
