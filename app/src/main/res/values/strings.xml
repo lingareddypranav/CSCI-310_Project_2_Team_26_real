@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">CSCI-310 Project 2 Team 26</string>
     <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_dashboard">Prompts</string>
+    <string name="title_notifications">Activity</string>
 
     <!-- NEW STRINGS FOR AUTHENTICATION AND PROFILE - ADD THESE BELOW -->
 
@@ -101,4 +101,92 @@
     <string name="ic_calendar">Calendar icon</string>
     <string name="ic_info">Info icon</string>
     <string name="ic_star">Star icon</string>
+
+    <string name="menu_profile_settings">Profile</string>
+    <string name="profile_settings_title">Profile Settings</string>
+    <string name="profile_settings_heading_non_editable">Basic information</string>
+    <string name="profile_settings_heading_editable">Update your details</string>
+    <string name="profile_settings_save">Save changes</string>
+    <string name="profile_settings_reset_password">Reset password</string>
+    <string name="profile_settings_current_password">Current password</string>
+    <string name="profile_settings_new_password">New password</string>
+    <string name="profile_settings_reset_success">Password reset email sent!</string>
+    <string name="profile_settings_reset_error">Unable to reset password</string>
+    <string name="post_detail_add_comment">Write a comment</string>
+    <string name="title_create_post">Create Post</string>
+    <string name="create_post_title_hint">Post title</string>
+    <string name="create_post_body_hint">Share your thoughts</string>
+    <string name="create_post_tag_hint">Tag (e.g. GPT-4)</string>
+    <string name="create_post_is_prompt">Is this a prompt post?</string>
+    <string name="create_post_submit">Publish</string>
+    <string name="create_post_success">Post created!</string>
+    <string name="create_post_error">Unable to create post</string>
+    <string name="title_edit_post">Edit Post</string>
+    <string name="edit_post_save">Save changes</string>
+    <string name="edit_post_success">Post updated!</string>
+    <string name="edit_post_error">Unable to update post</string>
+    <string name="title_edit_comment">Edit Comment</string>
+    <string name="edit_comment_hint">Update your comment</string>
+    <string name="edit_comment_save">Save comment</string>
+    <string name="edit_comment_success">Comment updated!</string>
+    <string name="edit_comment_error">Unable to update comment</string>
+    <string name="user_activity_empty_state">You haven’t posted or commented yet.</string>
+    <string name="user_activity_post_label">Post</string>
+    <string name="user_activity_comment_label">Comment</string>
+    <string name="title_create_post_nav">Create</string>
+    
+    <!-- Search -->
+    <string name="search_title">Search Posts</string>
+    <string name="search_query_hint">Enter search keyword</string>
+    <string name="search_type_label">Search by:</string>
+    <string name="search_type_tag">Tag</string>
+    <string name="search_type_author">Author</string>
+    <string name="search_type_title">Title</string>
+    <string name="search_type_full_text">Full Text</string>
+    <string name="search_type_prompt_tag">Prompt Tag</string>
+    
+    <!-- Trending -->
+    <string name="trending_posts_title">Trending Posts</string>
+    <string name="refresh">Refresh</string>
+    
+    <!-- Post Date Formatting -->
+    <string name="post_date_just_now">Just now</string>
+    <string name="post_date_minutes_ago">%d minutes ago</string>
+    <string name="post_date_hours_ago">%d hours ago</string>
+    <string name="post_date_yesterday">Yesterday</string>
+    <string name="post_date_days_ago">%d days ago</string>
+    
+    <!-- Delete Post -->
+    <string name="delete_post">Delete</string>
+    <string name="delete_post_confirm_title">Delete Post</string>
+    <string name="delete_post_confirm_message">Are you sure you want to delete this post? This action cannot be undone.</string>
+    <string name="delete_post_success">Post deleted successfully</string>
+    <string name="delete_post_error">Failed to delete post</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Home feed -->
+    <string name="search_posts_hint">Search posts</string>
+    <string name="sort_by_label">Sort by</string>
+    <string name="sort_option_newest">Newest</string>
+    <string name="sort_option_top">Top score</string>
+    <string name="home_empty_state">No posts match your filters yet.</string>
+    <string name="post_meta_unknown_author">Unknown author</string>
+    <string name="post_tag_format">#%1$s</string>
+    <string name="post_tag_unknown">#untagged</string>
+    <string name="post_author_format">By %1$s</string>
+
+    <plurals name="post_comments">
+        <item quantity="one">%1$s comment</item>
+        <item quantity="other">%1$s comments</item>
+    </plurals>
+    <plurals name="post_upvotes">
+        <item quantity="one">%1$s upvote</item>
+        <item quantity="other">%1$s upvotes</item>
+    </plurals>
+    <plurals name="post_downvotes">
+        <item quantity="one">%1$s downvote</item>
+        <item quantity="other">%1$s downvotes</item>
+    </plurals>
+
+
 </resources>

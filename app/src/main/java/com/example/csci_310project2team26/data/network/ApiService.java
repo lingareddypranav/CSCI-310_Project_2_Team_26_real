@@ -2,17 +2,23 @@ package com.example.csci_310project2team26.data.network;
 
 import com.example.csci_310project2team26.data.model.Profile;
 import com.example.csci_310project2team26.data.repository.AuthRepository;
+import com.example.csci_310project2team26.data.model.Post;
+import com.example.csci_310project2team26.data.model.Comment;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * ApiService - RESTful API interface for BestLLM backend
@@ -22,7 +28,7 @@ import retrofit2.http.Path;
  */
 public interface ApiService {
     
-    String BASE_URL = "https://api.bestllm.com/"; // Replace with actual backend URL
+    String BASE_URL = "https://csci-310project2team26real-production.up.railway.app/"; // Hosted backend base URL
     
     // Authentication endpoints
     @POST("api/auth/register")
@@ -51,11 +57,11 @@ public interface ApiService {
         @Header("Authorization") String token
     );
     
-    // Profile endpoints
+    // Profile endpoints (protected)
     @POST("api/profile/create")
     @FormUrlEncoded
     Call<Void> createProfile(
-        @Field("user_id") String userId,
+        @Header("Authorization") String token,
         @Field("affiliation") String affiliation,
         @Field("birth_date") String birthDate,
         @Field("bio") String bio,
@@ -71,6 +77,7 @@ public interface ApiService {
     @PUT("api/profile/{userId}")
     @FormUrlEncoded
     Call<Void> updateProfile(
+        @Header("Authorization") String token,
         @Path("userId") String userId,
         @Field("birth_date") String birthDate,
         @Field("bio") String bio,
@@ -81,10 +88,162 @@ public interface ApiService {
     @POST("api/profile/reset-password")
     @FormUrlEncoded
     Call<Void> resetPassword(
-        @Field("user_id") String userId,
+        @Header("Authorization") String token,
         @Field("current_password") String currentPassword,
         @Field("new_password") String newPassword
     );
+
+    // Posts endpoints
+    @GET("api/posts")
+    Call<PostsResponse> getPosts(
+        @Query("sort") String sort,
+        @Query("limit") Integer limit,
+        @Query("offset") Integer offset,
+        @Query("is_prompt_post") Boolean isPromptPost
+    );
+
+    @GET("api/posts/prompts")
+    Call<PostsResponse> getPromptPosts(
+        @Query("sort") String sort,
+        @Query("limit") Integer limit,
+        @Query("offset") Integer offset
+    );
+
+    @GET("api/posts/trending")
+    Call<PostsResponse> getTrendingPosts(
+        @Query("k") Integer k
+    );
+
+    @GET("api/posts/search")
+    Call<PostsResponse> searchPosts(
+        @Query("q") String query,
+        @Query("search_type") String searchType,
+        @Query("limit") Integer limit,
+        @Query("offset") Integer offset,
+        @Query("is_prompt_post") Boolean isPromptPost
+    );
+
+    @GET("api/posts/{id}")
+    Call<PostResponse> getPostById(@Path("id") String id);
+
+    @POST("api/posts")
+    @FormUrlEncoded
+    Call<PostResponse> createPost(
+        @Header("Authorization") String token,
+        @Field("title") String title,
+        @Field("content") String content,
+        @Field("llm_tag") String llmTag,
+        @Field("is_prompt_post") boolean isPromptPost
+    );
+
+    @PUT("api/posts/{id}")
+    @FormUrlEncoded
+    Call<PostResponse> updatePost(
+        @Header("Authorization") String token,
+        @Path("id") String id,
+        @Field("title") String title,
+        @Field("content") String content,
+        @Field("llm_tag") String llmTag,
+        @Field("is_prompt_post") Boolean isPromptPost
+    );
+
+    @DELETE("api/posts/{id}")
+    Call<Void> deletePost(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
+
+    // Comments endpoints
+    @GET("api/comments/{postId}")
+    Call<CommentsResponse> getComments(@Path("postId") String postId);
+
+    @POST("api/comments")
+    @FormUrlEncoded
+    Call<CommentResponse> createComment(
+        @Header("Authorization") String token,
+        @Field("post_id") String postId,
+        @Field("text") String text
+    );
+
+    @PUT("api/comments/{id}")
+    @FormUrlEncoded
+    Call<CommentResponse> updateComment(
+        @Header("Authorization") String token,
+        @Path("id") String id,
+        @Field("text") String text
+    );
+
+    @DELETE("api/comments/{id}")
+    Call<Void> deleteComment(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
+
+    // Votes endpoints
+    @POST("api/votes/post/{postId}")
+    @FormUrlEncoded
+    Call<VoteActionResponse> votePost(
+        @Header("Authorization") String token,
+        @Path("postId") String postId,
+        @Field("type") String type
+    );
+
+    @POST("api/votes/comment/{commentId}")
+    @FormUrlEncoded
+    Call<VoteActionResponse> voteComment(
+        @Header("Authorization") String token,
+        @Path("commentId") String commentId,
+        @Field("type") String type
+    );
+
+    @DELETE("api/votes/post/{postId}")
+    Call<Void> removePostVote(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
+
+    @DELETE("api/votes/comment/{commentId}")
+    Call<Void> removeCommentVote(
+        @Header("Authorization") String token,
+        @Path("commentId") String commentId
+    );
+
+    @GET("api/votes/post/{postId}")
+    Call<VoteCountsResponse> getPostVoteCounts(@Path("postId") String postId);
+
+    @GET("api/votes/comment/{commentId}")
+    Call<VoteCountsResponse> getCommentVoteCounts(@Path("commentId") String commentId);
+
+    // Simple response wrappers
+    class PostsResponse {
+        public List<Post> posts;
+        public int count;
+    }
+
+    class PostResponse {
+        public Post post;
+    }
+
+    class CommentsResponse {
+        public List<Comment> comments;
+        public int count;
+    }
+
+    class CommentResponse {
+        public Comment comment;
+    }
+
+    class VoteActionResponse {
+        public String message;
+        public String action;
+        public String type;
+    }
+
+    class VoteCountsResponse {
+        public int upvotes;
+        public int downvotes;
+        public int total;
+    }
     
     /**
      * Singleton instance

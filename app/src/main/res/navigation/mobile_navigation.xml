@@ -9,7 +9,11 @@
         android:id="@+id/navigation_home"
         android:name="com.example.csci_310project2team26.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_postDetailFragment"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_dashboard"
@@ -18,8 +22,65 @@
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
+        android:id="@+id/navigation_create_post"
+        android:name="com.example.csci_310project2team26.ui.createpost.CreatePostFragment"
+        android:label="@string/title_create_post"
+        tools:layout="@layout/fragment_create_post" />
+
+    <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.example.csci_310project2team26.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_notifications" >
+        <action
+            android:id="@+id/action_navigation_notifications_to_editPostFragment"
+            app:destination="@id/editPostFragment" />
+        <action
+            android:id="@+id/action_navigation_notifications_to_editCommentFragment"
+            app:destination="@id/editCommentFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.example.csci_310project2team26.ui.home.PostDetailFragment"
+        android:label="Post"
+        tools:layout="@layout/fragment_post_detail" />
+
+    <fragment
+        android:id="@+id/profileSettingsFragment"
+        android:name="com.example.csci_310project2team26.ui.profile.ProfileSettingsFragment"
+        android:label="@string/profile_settings_title"
+        tools:layout="@layout/fragment_profile_settings" />
+
+    <fragment
+        android:id="@+id/editPostFragment"
+        android:name="com.example.csci_310project2team26.ui.editpost.EditPostFragment"
+        android:label="@string/title_edit_post"
+        tools:layout="@layout/fragment_edit_post" />
+
+    <fragment
+        android:id="@+id/editCommentFragment"
+        android:name="com.example.csci_310project2team26.ui.editcomment.EditCommentFragment"
+        android:label="@string/title_edit_comment"
+        tools:layout="@layout/fragment_edit_comment" />
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.csci_310project2team26.ui.search.SearchFragment"
+        android:label="@string/search_title"
+        tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_searchFragment_to_postDetailFragment"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/trendingPostsFragment"
+        android:name="com.example.csci_310project2team26.ui.trending.TrendingPostsFragment"
+        android:label="@string/trending_posts_title"
+        tools:layout="@layout/fragment_trending_posts">
+        <action
+            android:id="@+id/action_trendingPostsFragment_to_postDetailFragment"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
 </navigation>

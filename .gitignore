@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Gradle cache and temporary files
+caches/
+daemon/
+native/
+wrapper/
+android/
+gradle/wrapper/caches/
+gradle/wrapper/daemon/
+gradle/wrapper/native/
+gradle/wrapper/wrapper/
+gradle/wrapper/android/

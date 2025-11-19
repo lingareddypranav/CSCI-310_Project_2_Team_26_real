@@ -214,23 +214,43 @@ public class RegistrationActivity extends AppCompatActivity {
             binding.registerButton.setEnabled(true);
             
             if (state instanceof AuthViewModel.RegistrationState.Success) {
-                AuthViewModel.RegistrationState.Success successState = 
-                    (AuthViewModel.RegistrationState.Success) state;
-                Toast.makeText(this, "Registration successful! Please complete your profile.", 
-                    Toast.LENGTH_LONG).show();
-                
-                // Navigate to profile creation
-                Intent intent = new Intent(this, ProfileCreationActivity.class);
-                intent.putExtra("USER_ID", successState.getUserId());
-                intent.putExtra("USER_NAME", binding.nameEditText.getText().toString());
-                intent.putExtra("USER_EMAIL", binding.emailEditText.getText().toString());
-                startActivity(intent);
-                finish();
+                // After successful registration, automatically log in to obtain token
+                String email = binding.emailEditText.getText().toString();
+                String password = binding.passwordEditText.getText().toString();
+
+                binding.progressBar.setVisibility(View.VISIBLE);
+                binding.registerButton.setEnabled(false);
+
+                authViewModel.login(email, password, true);
             } else if (state instanceof AuthViewModel.RegistrationState.Error) {
                 AuthViewModel.RegistrationState.Error errorState = 
                     (AuthViewModel.RegistrationState.Error) state;
                 Toast.makeText(this, "Registration failed: " + errorState.getMessage(), 
                     Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // Observe login state to proceed to profile creation after auto-login
+        authViewModel.getLoginState().observe(this, state -> {
+            if (state instanceof AuthViewModel.LoginState.Success) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.registerButton.setEnabled(true);
+
+                Toast.makeText(this, "Registration successful! Please complete your profile.",
+                        Toast.LENGTH_LONG).show();
+
+                // We don't have userId from login here; use the Registration success ID from repo if needed.
+                // For now, navigate with known name/email; server can derive user by token on profile create.
+                Intent intent = new Intent(this, ProfileCreationActivity.class);
+                intent.putExtra("USER_NAME", binding.nameEditText.getText().toString());
+                intent.putExtra("USER_EMAIL", binding.emailEditText.getText().toString());
+                startActivity(intent);
+                finish();
+            } else if (state instanceof AuthViewModel.LoginState.Error) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.registerButton.setEnabled(true);
+                AuthViewModel.LoginState.Error errorState = (AuthViewModel.LoginState.Error) state;
+                Toast.makeText(this, "Auto-login failed: " + errorState.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
