@@ -222,8 +222,17 @@ public class PostRepository {
                 String safeTitle = title != null ? title.trim() : "";
                 String safeContent = content != null ? content.trim() : "";
                 String safeLlmTag = llmTag != null ? llmTag.trim() : "";
-                String safePromptSection = promptSection != null ? promptSection.trim() : "";
-                String safeDescriptionSection = descriptionSection != null ? descriptionSection.trim() : "";
+
+                // Only send prompt fields when the post is marked as a prompt post. Some backends
+                // infer the post type from the presence of these fields, so passing empty strings
+                // can cause the request to be validated as a prompt post even when the toggle is
+                // off.
+                String safePromptSection = isPromptPost
+                        ? (promptSection != null ? promptSection.trim() : "")
+                        : null;
+                String safeDescriptionSection = isPromptPost
+                        ? (descriptionSection != null ? descriptionSection.trim() : "")
+                        : null;
 
                 retrofit2.Call<ApiService.PostResponse> call = apiService.createPost(
                     "Bearer " + token,
