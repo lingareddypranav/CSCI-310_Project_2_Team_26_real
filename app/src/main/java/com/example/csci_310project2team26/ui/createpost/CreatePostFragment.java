@@ -29,9 +29,12 @@ public class CreatePostFragment extends Fragment {
         binding = FragmentCreatePostBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
 
-        // Initialize switch state BEFORE setting listener to avoid triggering listener
+        // CRITICAL: Initialize switch state BEFORE setting listener to avoid triggering listener
         // Ensure switch starts unchecked (regular post by default)
         if (binding.promptSwitch != null) {
+            // Temporarily remove any existing listener to prevent triggering during initialization
+            binding.promptSwitch.setOnCheckedChangeListener(null);
+            // Set to unchecked (regular post mode)
             binding.promptSwitch.setChecked(false);
         }
         if (binding.promptSectionLayout != null) {
@@ -89,15 +92,21 @@ public class CreatePostFragment extends Fragment {
         String body = binding.bodyEditText.getText() != null ? binding.bodyEditText.getText().toString() : "";
         String tag = binding.tagEditText.getText() != null ? binding.tagEditText.getText().toString() : "";
         
-        // Read switch state - this determines if it's a prompt post or regular post
-        boolean isPrompt = binding.promptSwitch != null && binding.promptSwitch.isChecked();
+        // CRITICAL: Read switch state explicitly - default to false (regular post) if switch is null
+        // This ensures we never accidentally treat a regular post as a prompt post
+        boolean isPrompt = false;
+        if (binding.promptSwitch != null) {
+            isPrompt = binding.promptSwitch.isChecked();
+        }
         
-        // Initialize prompt sections as null
+        // Initialize prompt sections as null - will only be set if isPrompt is true
         String promptSection = null;
         String descriptionSection = null;
         
-        // Only get prompt section values if switch is explicitly checked
+        // ONLY get prompt section values if switch is EXPLICITLY checked
+        // For regular posts, these MUST remain null
         if (isPrompt) {
+            // This is a prompt post - get the prompt section values
             if (binding.promptSectionEditText != null) {
                 String promptText = binding.promptSectionEditText.getText() != null ? 
                     binding.promptSectionEditText.getText().toString() : "";
@@ -113,7 +122,8 @@ public class CreatePostFragment extends Fragment {
                 }
             }
         }
-        // For regular posts (isPrompt = false), promptSection and descriptionSection remain null
+        // IMPORTANT: For regular posts (isPrompt = false), promptSection and descriptionSection MUST remain null
+        // The ViewModel will enforce this, but we ensure it here too
 
         viewModel.createPost(title, body, tag, isPrompt, promptSection, descriptionSection);
     }

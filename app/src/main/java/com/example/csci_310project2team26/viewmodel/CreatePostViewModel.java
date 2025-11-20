@@ -28,6 +28,9 @@ public class CreatePostViewModel extends ViewModel {
 
     public void createPost(String title, String content, String tag, boolean isPrompt, 
                            String promptSection, String descriptionSection) {
+        // Clear any previous errors
+        error.postValue(null);
+        
         if (title == null || title.trim().isEmpty()) {
             error.postValue("Title is required");
             return;
@@ -39,10 +42,21 @@ public class CreatePostViewModel extends ViewModel {
             return;
         }
         
-        // Validate based on post type
-        if (isPrompt) {
-            // For prompt posts, require either prompt_section or description_section
-            // Normalize prompt sections (trim and check if empty)
+        // CRITICAL: For regular posts, explicitly set isPrompt to false and null out prompt sections
+        // This prevents any edge cases where isPrompt might be incorrectly true
+        if (!isPrompt) {
+            // REGULAR POST: Force isPrompt to false and null out prompt sections
+            isPrompt = false;
+            promptSection = null;
+            descriptionSection = null;
+            
+            // Validate content is required for regular posts
+            if (content == null || content.trim().isEmpty()) {
+                error.postValue("Content is required");
+                return;
+            }
+        } else {
+            // PROMPT POST: Validate that at least one prompt section exists
             String trimmedPromptSection = (promptSection != null && !promptSection.trim().isEmpty()) ? promptSection.trim() : null;
             String trimmedDescriptionSection = (descriptionSection != null && !descriptionSection.trim().isEmpty()) ? descriptionSection.trim() : null;
             
@@ -54,15 +68,6 @@ public class CreatePostViewModel extends ViewModel {
             // Use trimmed versions
             promptSection = trimmedPromptSection;
             descriptionSection = trimmedDescriptionSection;
-        } else {
-            // For regular posts, ensure prompt sections are null and require content
-            promptSection = null;
-            descriptionSection = null;
-            
-            if (content == null || content.trim().isEmpty()) {
-                error.postValue("Content is required");
-                return;
-            }
         }
 
         loading.postValue(true);
