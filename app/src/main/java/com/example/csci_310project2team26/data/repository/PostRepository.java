@@ -223,10 +223,10 @@ public class PostRepository {
                 String safeContent = content != null ? content.trim() : "";
                 String safeLlmTag = llmTag != null ? llmTag.trim() : "";
 
-                // Only send prompt fields when the post is marked as a prompt post. Some backends
-                // infer the post type from the presence of these fields, so passing empty strings
-                // can cause the request to be validated as a prompt post even when the toggle is
-                // off.
+                // Only send prompt fields when the post is marked as a prompt post and the
+                // sections contain real content. Otherwise, omit them to avoid the backend
+                // inferring a prompt post from empty strings. This mirrors the Create page UI
+                // where the prompt fields are hidden when the toggle is off.
                 String safePromptSection = isPromptPost
                         ? (promptSection != null ? promptSection.trim() : "")
                         : null;
@@ -234,12 +234,23 @@ public class PostRepository {
                         ? (descriptionSection != null ? descriptionSection.trim() : "")
                         : null;
 
+                boolean hasPromptContent = (safePromptSection != null && !safePromptSection.isEmpty())
+                        || (safeDescriptionSection != null && !safeDescriptionSection.isEmpty());
+                boolean normalizedIsPromptPost = isPromptPost && hasPromptContent;
+
+                if (!normalizedIsPromptPost) {
+                    // Ensure prompt fields are completely omitted when treating the submission as
+                    // a normal post to prevent server-side prompt validation from triggering.
+                    safePromptSection = null;
+                    safeDescriptionSection = null;
+                }
+
                 retrofit2.Call<ApiService.PostResponse> call = apiService.createPost(
                     "Bearer " + token,
                     safeTitle,
                     safeContent,
                     safeLlmTag,
-                    isPromptPost,
+                    normalizedIsPromptPost,
                     safePromptSection,
                     safeDescriptionSection
                 );

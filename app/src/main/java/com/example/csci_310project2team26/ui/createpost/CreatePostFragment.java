@@ -29,12 +29,33 @@ public class CreatePostFragment extends Fragment {
         binding = FragmentCreatePostBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
 
+        // Always start with prompt mode off to avoid leaking prior state when navigating back to
+        // this screen.
+        binding.promptSwitch.setChecked(false);
+        if (binding.promptSectionLayout != null) {
+            binding.promptSectionLayout.setVisibility(View.GONE);
+        }
+        if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
+            ((View) binding.bodyEditText.getParent()).setVisibility(View.VISIBLE);
+        }
+
         binding.publishButton.setOnClickListener(v -> onPublishClicked());
 
         // Show/hide prompt fields based on toggle
         binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (binding.promptSectionLayout != null) {
                 binding.promptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+
+            // When turning prompt mode off, clear any lingering prompt content so it isn't
+            // accidentally submitted or used to infer a prompt post type on the backend.
+            if (!isChecked) {
+                if (binding.promptSectionEditText != null) {
+                    binding.promptSectionEditText.setText("");
+                }
+                if (binding.descriptionSectionEditText != null) {
+                    binding.descriptionSectionEditText.setText("");
+                }
             }
 
             // Hide the normal body field for prompt posts and show it for regular posts
