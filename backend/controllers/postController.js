@@ -338,6 +338,9 @@ const createPost = async (req, res) => {
     const authorId = req.user.userId;
     const { title, content, llm_tag, is_prompt_post, prompt_section, description_section } = req.body;
 
+    // Ensure is_prompt_post is treated as a boolean even when sent as a string from form data
+    const isPromptPost = is_prompt_post === true || is_prompt_post === 'true';
+
     // Validation
     if (!title || !llm_tag) {
       return res.status(400).json({
@@ -348,7 +351,7 @@ const createPost = async (req, res) => {
 
     // For prompt posts, require either prompt_section or description_section
     // For regular posts, require content
-    if (is_prompt_post) {
+    if (isPromptPost) {
       if (!prompt_section && !description_section) {
         return res.status(400).json({
           error: 'Missing required fields',
@@ -369,7 +372,7 @@ const createPost = async (req, res) => {
       `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [authorId, title, content || null, llm_tag, is_prompt_post || false, prompt_section || null, description_section || null]
+      [authorId, title, content || null, llm_tag, isPromptPost || false, prompt_section || null, description_section || null]
     );
 
     const postId = insertResult.rows[0].id;
@@ -419,6 +422,10 @@ const updatePost = async (req, res) => {
     const userId = req.user.userId;
     const { title, content, llm_tag, is_prompt_post, prompt_section, description_section } = req.body;
 
+    // Normalize boolean value in case it comes through as a string
+    const normalizedIsPromptPost =
+      is_prompt_post === undefined ? undefined : is_prompt_post === true || is_prompt_post === 'true';
+
     // Check if post exists and user is author
     const postCheck = await query(
       'SELECT author_id FROM posts WHERE id = $1',
@@ -455,9 +462,9 @@ const updatePost = async (req, res) => {
       updates.push(`llm_tag = $${paramCount++}`);
       values.push(llm_tag);
     }
-    if (is_prompt_post !== undefined) {
+    if (normalizedIsPromptPost !== undefined) {
       updates.push(`is_prompt_post = $${paramCount++}`);
-      values.push(is_prompt_post);
+      values.push(normalizedIsPromptPost);
     }
     if (prompt_section !== undefined) {
       updates.push(`prompt_section = $${paramCount++}`);
