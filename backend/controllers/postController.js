@@ -381,6 +381,13 @@ const createPost = async (req, res) => {
       }
     }
 
+    // Some clients omit the body field for prompt posts. To keep the database insert happy on
+    // schemas where content is non-nullable, reuse the prompt fields as a fallback payload when
+    // handling a prompt submission.
+    const normalizedContent = isPromptPost
+      ? (content || description_section || prompt_section || '')
+      : content;
+
     // Insert post
     const insertResult = await query(
       `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section)
@@ -389,7 +396,7 @@ const createPost = async (req, res) => {
       [
         authorId,
         title,
-        content || null,
+        normalizedContent || null,
         llm_tag,
         isPromptPost || false,
         prompt_section || null,

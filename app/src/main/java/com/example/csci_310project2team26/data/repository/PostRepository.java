@@ -238,7 +238,18 @@ public class PostRepository {
                         || (safeDescriptionSection != null && !safeDescriptionSection.isEmpty());
                 boolean normalizedIsPromptPost = isPromptPost && hasPromptContent;
 
-                if (!normalizedIsPromptPost) {
+                if (normalizedIsPromptPost) {
+                    // Some backends still expect `content` to be populated even for prompt posts.
+                    // Fall back to one of the prompt fields so the server never receives a null
+                    // or empty content value when a prompt post is intended.
+                    if (safeContent.isEmpty()) {
+                        if (safeDescriptionSection != null && !safeDescriptionSection.isEmpty()) {
+                            safeContent = safeDescriptionSection;
+                        } else if (safePromptSection != null && !safePromptSection.isEmpty()) {
+                            safeContent = safePromptSection;
+                        }
+                    }
+                } else {
                     // Ensure prompt fields are completely omitted when treating the submission as
                     // a normal post to prevent server-side prompt validation from triggering.
                     safePromptSection = null;
