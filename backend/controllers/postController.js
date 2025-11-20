@@ -349,14 +349,15 @@ const createPost = async (req, res) => {
     // For prompt posts, require either prompt_section or description_section
     // For regular posts, require content
     if (is_prompt_post) {
-      if (!prompt_section && !description_section) {
+      if ((!prompt_section || prompt_section.trim() === '') && 
+          (!description_section || description_section.trim() === '')) {
         return res.status(400).json({
           error: 'Missing required fields',
           message: 'Prompt posts require either prompt_section or description_section'
         });
       }
     } else {
-      if (!content) {
+      if (!content || content.trim() === '') {
         return res.status(400).json({
           error: 'Missing required fields',
           message: 'Content is required for regular posts'

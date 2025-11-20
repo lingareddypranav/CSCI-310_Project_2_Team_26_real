@@ -567,7 +567,7 @@ Black-box tests verify the application's functionality from a user's perspective
 ### Overview
 White-box tests verify the internal implementation of classes, testing individual methods, edge cases, and data flow. These tests have access to the source code and test specific implementation details.
 
-**Total White-Box Test Cases: 81** (exceeds minimum requirement of 20 for team of 4)
+**Total White-Box Test Cases: 68** (exceeds minimum requirement of 20 for team of 4)
 
 ### Coverage Criteria
 We use **statement coverage** and **branch coverage** as our primary coverage criteria:
@@ -1342,139 +1342,6 @@ We use **statement coverage** and **branch coverage** as our primary coverage cr
 - **Rationale**: Edge case: users may submit empty search. Must handle gracefully.
 - **Bug Found**: None
 
----
-
-### Test Case 70: EditCommentViewModel Initial State
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/EditCommentViewModelTest.java`
-- **Test Method**: `testInitialState()`
-- **Description**: Verifies ViewModel starts in correct initial state with all LiveData null/false.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "EditCommentViewModelTest.testInitialState"`
-- **Result**: ✅ PASS - Initial state is correct
-- **Rationale**: ViewModel must start in a clean state before any operations.
-- **Bug Found**: None
-
----
-
-### Test Case 71: Load Comment with Valid IDs
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/EditCommentViewModelTest.java`
-- **Test Method**: `testLoadCommentWithValidIds()`
-- **Description**: Tests loading a comment with valid post and comment IDs, verifies loading state is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "EditCommentViewModelTest.testLoadCommentWithValidIds"`
-- **Result**: ✅ PASS - Loading state is correctly set
-- **Rationale**: Loading comments is essential for editing. Must work with valid IDs.
-- **Bug Found**: None
-
----
-
-### Test Case 72: Load Comment with Null IDs
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/EditCommentViewModelTest.java`
-- **Test Method**: `testLoadCommentWithNullPostId()`, `testLoadCommentWithNullCommentId()`
-- **Description**: Tests loading comment with null post ID or comment ID, verifies method returns early without crashing.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "EditCommentViewModelTest.testLoadCommentWithNullPostId"`
-- **Result**: ✅ PASS - Null IDs are handled gracefully
-- **Rationale**: Edge case: null IDs should not crash the app. Must handle gracefully.
-- **Bug Found**: None
-
----
-
-### Test Case 73: Update Comment with Valid Data
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/EditCommentViewModelTest.java`
-- **Test Method**: `testUpdateCommentWithValidData()`
-- **Description**: Tests updating comment with valid post ID, comment ID, and text, verifies loading state is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "EditCommentViewModelTest.testUpdateCommentWithValidData"`
-- **Result**: ✅ PASS - Update operation starts correctly
-- **Rationale**: Comment updates are common. Must work with valid data.
-- **Bug Found**: None
-
----
-
-### Test Case 74: Update Comment with Title
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/EditCommentViewModelTest.java`
-- **Test Method**: `testUpdateCommentWithTitle()`
-- **Description**: Tests updating comment with title field, verifies loading state is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "EditCommentViewModelTest.testUpdateCommentWithTitle"`
-- **Result**: ✅ PASS - Comment update with title works correctly
-- **Rationale**: Comments can have optional titles. Update must support this.
-- **Bug Found**: None
-
----
-
-### Test Case 75: CreatePostViewModel Initial State
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testInitialState()`
-- **Description**: Verifies ViewModel starts in correct initial state with all LiveData null/false.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testInitialState"`
-- **Result**: ✅ PASS - Initial state is correct
-- **Rationale**: ViewModel must start in a clean state before creating posts.
-- **Bug Found**: None
-
----
-
-### Test Case 76: Create Post with Empty Title
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreatePostWithEmptyTitle()`
-- **Description**: Tests validation for empty title, verifies error message "Title is required" is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreatePostWithEmptyTitle"`
-- **Result**: ✅ PASS - Validation error is correctly set
-- **Rationale**: Title is required. Validation must prevent posts without titles.
-- **Bug Found**: None
-
----
-
-### Test Case 77: Create Post with Empty Tag
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreatePostWithEmptyTag()`
-- **Description**: Tests validation for empty tag, verifies error message "Tag is required" is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreatePostWithEmptyTag"`
-- **Result**: ✅ PASS - Validation error is correctly set
-- **Rationale**: Tag is required by backend. Frontend validation must enforce this.
-- **Bug Found**: None
-
----
-
-### Test Case 78: Create Regular Post with Empty Content
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreateRegularPostWithEmptyContent()`
-- **Description**: Tests validation for regular post with empty content, verifies error message "Content is required" is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreateRegularPostWithEmptyContent"`
-- **Result**: ✅ PASS - Validation error is correctly set
-- **Rationale**: Regular posts require content. Validation must enforce this.
-- **Bug Found**: None
-
----
-
-### Test Case 79: Create Prompt Post Without Prompt Sections
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreatePromptPostWithoutPromptSections()`
-- **Description**: Tests validation for prompt post without prompt or description sections, verifies error message is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreatePromptPostWithoutPromptSections"`
-- **Result**: ✅ PASS - Validation error is correctly set
-- **Rationale**: Prompt posts require either prompt or description section. Validation must enforce this.
-- **Bug Found**: None
-
----
-
-### Test Case 80: Create Prompt Post with Prompt Section
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreatePromptPostWithPromptSection()`
-- **Description**: Tests creating prompt post with prompt section (valid), verifies loading state is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreatePromptPostWithPromptSection"`
-- **Result**: ✅ PASS - Validation passes and loading is set
-- **Rationale**: Prompt posts with prompt section are valid. Must work correctly.
-- **Bug Found**: None
-
----
-
-### Test Case 81: Create Regular Post with Valid Data
-- **Location**: `app/src/test/java/com/example/csci_310project2team26/viewmodel/CreatePostViewModelTest.java`
-- **Test Method**: `testCreateRegularPostWithValidData()`
-- **Description**: Tests creating regular post with all required fields (valid), verifies loading state is set.
-- **How to Execute**: Run as JUnit test: `./gradlew test --tests "CreatePostViewModelTest.testCreateRegularPostWithValidData"`
-- **Result**: ✅ PASS - Validation passes and loading is set
-- **Rationale**: Regular post creation is the most common case. Must work correctly.
-- **Bug Found**: None
-
----
 
 ## Coverage Criteria Explanation
 
@@ -1530,10 +1397,9 @@ We use **statement coverage** and **branch coverage** as our primary coverage cr
 
 ## Test Summary
 
-### White-Box Tests: 81 test cases
+### White-Box Tests: 68 test cases
 - **Model Tests**: 39 test cases (Post: 12, Comment: 10, User: 8, Profile: 9)
 - **Repository Tests**: 29 test cases (SessionManager: 7, AuthRepository: 10, PostRepository: 12)
-- **ViewModel Tests**: 13 test cases (EditCommentViewModel: 9, CreatePostViewModel: 4)
 
 ### Black-Box Tests: 43 test cases
 - **UI Tests**: 33 test cases
@@ -1543,7 +1409,7 @@ We use **statement coverage** and **branch coverage** as our primary coverage cr
   - CreatePost: 8 test cases (regular posts, prompt posts, validation)
 - **API Integration Tests**: 10 test cases
 
-### Total: 124 test cases (exceeds minimum requirement of 40 for team of 4)
+### Total: 111 test cases (exceeds minimum requirement of 40 for team of 4)
 
 All tests are executable and work with the current codebase. Useless tests (empty implementations, commented-out code, template files) have been removed. All remaining tests verify important functionality, edge cases, or new features (logout, password reset, prompt posts, comment titles, etc.).
 

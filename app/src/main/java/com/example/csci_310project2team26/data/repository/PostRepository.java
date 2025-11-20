@@ -2,7 +2,10 @@ package com.example.csci_310project2team26.data.repository;
 
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.network.ApiService;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -234,11 +237,45 @@ public class PostRepository {
                     callback.onSuccess(response.body().post);
                 } else {
                     String errorMsg = "Failed to create post";
-                    if (response.code() == 401) {
-                        errorMsg = "Authentication required";
-                    } else if (response.code() == 400) {
-                        errorMsg = "Invalid post data";
+                    
+                    // Try to parse error message from response body
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            try {
+                                JsonObject errorJson = JsonParser.parseString(errorBody).getAsJsonObject();
+                                if (errorJson.has("message")) {
+                                    errorMsg = errorJson.get("message").getAsString();
+                                } else if (errorJson.has("error")) {
+                                    errorMsg = errorJson.get("error").getAsString();
+                                }
+                            } catch (Exception e) {
+                                // If JSON parsing fails, try to extract message manually
+                                if (errorBody.contains("\"message\"")) {
+                                    int messageIndex = errorBody.indexOf("\"message\":\"");
+                                    if (messageIndex >= 0) {
+                                        int start = messageIndex + 11;
+                                        int end = errorBody.indexOf("\"", start);
+                                        if (end > start) {
+                                            errorMsg = errorBody.substring(start, end);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        // Use default message based on status code
                     }
+                    
+                    // Fallback to status code-based messages if parsing failed
+                    if (errorMsg.equals("Failed to create post")) {
+                        if (response.code() == 401) {
+                            errorMsg = "Authentication required";
+                        } else if (response.code() == 400) {
+                            errorMsg = "Invalid post data";
+                        }
+                    }
+                    
                     callback.onError(errorMsg);
                 }
             } catch (Exception e) {
