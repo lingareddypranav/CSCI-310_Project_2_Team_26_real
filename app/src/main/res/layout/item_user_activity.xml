@@ -47,6 +47,16 @@
                 tools:text="Updated 2 hours ago" />
         </LinearLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteActivityButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/delete_post"
+            android:textAllCaps="false"
+            android:tooltipText="@string/delete_post" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

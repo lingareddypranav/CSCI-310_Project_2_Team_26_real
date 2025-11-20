@@ -33,12 +33,19 @@ public class CreatePostViewModel extends ViewModel {
             return;
         }
         
-        // For prompt posts, require either prompt_section or description_section
-        // For regular posts, require content
+        if (tag == null || tag.trim().isEmpty()) {
+            error.postValue("Tag is required");
+            return;
+        }
+
+        // For prompt posts, require prompt text and description. For regular posts, require content.
         if (isPrompt) {
-            if ((promptSection == null || promptSection.trim().isEmpty()) && 
-                (descriptionSection == null || descriptionSection.trim().isEmpty())) {
-                error.postValue("Prompt posts require either prompt section or description section");
+            if (promptSection == null || promptSection.trim().isEmpty()) {
+                error.postValue("Prompt text is required for prompt posts");
+                return;
+            }
+            if (descriptionSection == null || descriptionSection.trim().isEmpty()) {
+                error.postValue("Description is required for prompt posts");
                 return;
             }
         } else {

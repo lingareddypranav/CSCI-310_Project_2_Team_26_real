@@ -14,11 +14,13 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci_310project2team26.R;
+import com.google.android.material.button.MaterialButton;
 
 public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActivityAdapter.ActivityViewHolder> {
 
     public interface OnActivityClickListener {
         void onActivityClicked(UserActivityItem item);
+        void onActivityDeleteClicked(UserActivityItem item);
     }
 
     private final OnActivityClickListener listener;
@@ -45,12 +47,14 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
         private final ImageView typeIconImageView;
         private final TextView titleTextView;
         private final TextView subtitleTextView;
+        private final MaterialButton deleteButton;
 
         ActivityViewHolder(@NonNull View itemView) {
             super(itemView);
             typeIconImageView = itemView.findViewById(R.id.typeIconImageView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             subtitleTextView = itemView.findViewById(R.id.subtitleTextView);
+            deleteButton = itemView.findViewById(R.id.deleteActivityButton);
         }
 
         void bind(UserActivityItem item, OnActivityClickListener listener) {
@@ -82,6 +86,11 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onActivityClicked(item);
+                }
+            });
+            deleteButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onActivityDeleteClicked(item);
                 }
             });
         }
