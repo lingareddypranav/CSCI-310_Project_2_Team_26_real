@@ -110,8 +110,11 @@
     <string name="profile_settings_reset_password">Reset password</string>
     <string name="profile_settings_current_password">Current password</string>
     <string name="profile_settings_new_password">New password</string>
-    <string name="profile_settings_reset_success">Password reset email sent!</string>
+    <string name="profile_settings_reset_success">Password updated</string>
     <string name="profile_settings_reset_error">Unable to reset password</string>
+    <string name="profile_settings_account">Account</string>
+    <string name="profile_settings_logout">Logout</string>
+    <string name="logout_success">Logged out successfully</string>
     <string name="post_detail_add_comment">Write a comment</string>
     <string name="title_create_post">Create Post</string>
     <string name="create_post_title_hint">Post title</string>
@@ -144,6 +147,12 @@
     <string name="search_type_title">Title</string>
     <string name="search_type_full_text">Full Text</string>
     <string name="search_type_prompt_tag">Prompt Tag</string>
+    
+    <string-array name="post_type_filter">
+        <item>All Posts</item>
+        <item>Normal Posts</item>
+        <item>Prompt Posts</item>
+    </string-array>
     
     <!-- Trending -->
     <string name="trending_posts_title">Trending Posts</string>

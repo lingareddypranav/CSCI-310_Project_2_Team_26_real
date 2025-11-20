@@ -207,6 +207,8 @@ public class PostRepository {
                            String content,
                            String llmTag,
                            boolean isPromptPost,
+                           String promptSection,
+                           String descriptionSection,
                            Callback<Post> callback) {
         executorService.execute(() -> {
             try {
@@ -215,13 +217,53 @@ public class PostRepository {
                     callback.onError("Authentication required");
                     return;
                 }
-                
+
+                // Normalize fields to avoid sending nulls in form data
+                String safeTitle = title != null ? title.trim() : "";
+                String safeContent = content != null ? content.trim() : "";
+                String safeLlmTag = llmTag != null ? llmTag.trim() : "";
+
+                // Only send prompt fields when the post is marked as a prompt post and the
+                // sections contain real content. Otherwise, omit them to avoid the backend
+                // inferring a prompt post from empty strings. This mirrors the Create page UI
+                // where the prompt fields are hidden when the toggle is off.
+                String safePromptSection = isPromptPost
+                        ? (promptSection != null ? promptSection.trim() : "")
+                        : null;
+                String safeDescriptionSection = isPromptPost
+                        ? (descriptionSection != null ? descriptionSection.trim() : "")
+                        : null;
+
+                boolean hasPromptContent = (safePromptSection != null && !safePromptSection.isEmpty())
+                        || (safeDescriptionSection != null && !safeDescriptionSection.isEmpty());
+                boolean normalizedIsPromptPost = isPromptPost && hasPromptContent;
+
+                if (normalizedIsPromptPost) {
+                    // Some backends still expect `content` to be populated even for prompt posts.
+                    // Fall back to one of the prompt fields so the server never receives a null
+                    // or empty content value when a prompt post is intended.
+                    if (safeContent.isEmpty()) {
+                        if (safeDescriptionSection != null && !safeDescriptionSection.isEmpty()) {
+                            safeContent = safeDescriptionSection;
+                        } else if (safePromptSection != null && !safePromptSection.isEmpty()) {
+                            safeContent = safePromptSection;
+                        }
+                    }
+                } else {
+                    // Ensure prompt fields are completely omitted when treating the submission as
+                    // a normal post to prevent server-side prompt validation from triggering.
+                    safePromptSection = null;
+                    safeDescriptionSection = null;
+                }
+
                 retrofit2.Call<ApiService.PostResponse> call = apiService.createPost(
                     "Bearer " + token,
-                    title,
-                    content,
-                    llmTag,
-                    isPromptPost
+                    safeTitle,
+                    safeContent,
+                    safeLlmTag,
+                    normalizedIsPromptPost,
+                    safePromptSection,
+                    safeDescriptionSection
                 );
                 
                 Response<ApiService.PostResponse> response = call.execute();
@@ -232,8 +274,21 @@ public class PostRepository {
                     String errorMsg = "Failed to create post";
                     if (response.code() == 401) {
                         errorMsg = "Authentication required";
-                    } else if (response.code() == 400) {
-                        errorMsg = "Invalid post data";
+                    } else {
+                        // Try to surface the backend validation message when available
+                        try {
+                            if (response.errorBody() != null) {
+                                String errorBody = response.errorBody().string();
+                                if (errorBody.contains("message")) {
+                                    // The error payload is small; simple contains check avoids extra JSON parsing libs
+                                    errorMsg = errorBody;
+                                }
+                            }
+                        } catch (Exception ignored) {}
+
+                        if (response.code() == 400) {
+                            errorMsg = errorMsg.equals("Failed to create post") ? "Invalid post data" : errorMsg;
+                        }
                     }
                     callback.onError(errorMsg);
                 }
@@ -351,6 +406,8 @@ public class PostRepository {
                            String content,
                            String llmTag,
                            boolean isPromptPost,
+                           String promptSection,
+                           String descriptionSection,
                            Callback<Post> callback) {
         executorService.execute(() -> {
             try {
@@ -366,7 +423,9 @@ public class PostRepository {
                     title,
                     content,
                     llmTag,
-                    isPromptPost
+                    isPromptPost,
+                    promptSection,
+                    descriptionSection
                 );
                 
                 Response<ApiService.PostResponse> response = call.execute();

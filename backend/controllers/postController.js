@@ -18,6 +18,8 @@ const getPosts = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -94,6 +96,8 @@ const getPromptPosts = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -154,6 +158,8 @@ const getTrendingPosts = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -206,6 +212,8 @@ const searchPosts = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -243,7 +251,7 @@ const searchPosts = async (req, res) => {
         break;
       case 'full_text':
       default:
-        queryText += ` (p.title ILIKE $${paramCount} OR p.content ILIKE $${paramCount++})`;
+        queryText += ` (p.title ILIKE $${paramCount} OR p.content ILIKE $${paramCount} OR p.prompt_section ILIKE $${paramCount} OR p.description_section ILIKE $${paramCount++})`;
         params.push(`%${q}%`);
         break;
     }
@@ -289,6 +297,8 @@ const getPostById = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -326,22 +336,72 @@ const getPostById = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     const authorId = req.user.userId;
-    const { title, content, llm_tag, is_prompt_post } = req.body;
+    // Normalize and trim incoming payload to avoid accepting empty whitespace
+    const title = (req.body.title || '').trim();
+    const content = (req.body.content || '').trim();
+    // Accept either "llm_tag" (preferred) or legacy "tag" field names from older clients
+    const llm_tag = (req.body.llm_tag || req.body.tag || '').trim();
+    const prompt_section = (req.body.prompt_section || '').trim();
+    const description_section = (req.body.description_section || '').trim();
+
+    // Ensure is_prompt_post is treated as a boolean even when sent as a string from form data.
+    // If the toggle is on but no prompt content is provided, treat the post as a regular post
+    // instead of failing validation. This mirrors the client behavior where the prompt fields
+    // are hidden when the toggle is off, so stale UI state shouldn't block normal posts.
+    const requestedPromptPost = req.body.is_prompt_post === true || req.body.is_prompt_post === 'true';
+    const hasPromptContent = !!(prompt_section || description_section);
+    let isPromptPost = requestedPromptPost || hasPromptContent;
+    if (isPromptPost && !hasPromptContent) {
+      isPromptPost = false;
+    }
 
     // Validation
-    if (!title || !content || !llm_tag) {
+    if (!title || !llm_tag) {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'Title, content, and llm_tag are required'
+        message: 'Title and llm_tag are required'
       });
     }
 
+    // For prompt posts, require either prompt_section or description_section
+    // For regular posts, require content
+    if (isPromptPost) {
+      if (!prompt_section && !description_section) {
+        return res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Prompt posts require either prompt_section or description_section'
+        });
+      }
+    } else {
+      if (!content) {
+        return res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Content is required for regular posts'
+        });
+      }
+    }
+
+    // Some clients omit the body field for prompt posts. To keep the database insert happy on
+    // schemas where content is non-nullable, reuse the prompt fields as a fallback payload when
+    // handling a prompt submission.
+    const normalizedContent = isPromptPost
+      ? (content || description_section || prompt_section || '')
+      : content;
+
     // Insert post
     const insertResult = await query(
-      `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [authorId, title, content, llm_tag, is_prompt_post || false]
+      [
+        authorId,
+        title,
+        normalizedContent || null,
+        llm_tag,
+        isPromptPost || false,
+        prompt_section || null,
+        description_section || null
+      ]
     );
 
     const postId = insertResult.rows[0].id;
@@ -354,6 +414,8 @@ const createPost = async (req, res) => {
         u.name as author_name,
         p.title,
         p.content,
+        p.prompt_section,
+        p.description_section,
         p.llm_tag,
         p.is_prompt_post,
         p.created_at,
@@ -387,7 +449,11 @@ const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { title, content, llm_tag, is_prompt_post } = req.body;
+    const { title, content, llm_tag, is_prompt_post, prompt_section, description_section } = req.body;
+
+    // Normalize boolean value in case it comes through as a string
+    const normalizedIsPromptPost =
+      is_prompt_post === undefined ? undefined : is_prompt_post === true || is_prompt_post === 'true';
 
     // Check if post exists and user is author
     const postCheck = await query(
@@ -425,9 +491,17 @@ const updatePost = async (req, res) => {
       updates.push(`llm_tag = $${paramCount++}`);
       values.push(llm_tag);
     }
-    if (is_prompt_post !== undefined) {
+    if (normalizedIsPromptPost !== undefined) {
       updates.push(`is_prompt_post = $${paramCount++}`);
-      values.push(is_prompt_post);
+      values.push(normalizedIsPromptPost);
+    }
+    if (prompt_section !== undefined) {
+      updates.push(`prompt_section = $${paramCount++}`);
+      values.push(prompt_section);
+    }
+    if (description_section !== undefined) {
+      updates.push(`description_section = $${paramCount++}`);
+      values.push(description_section);
     }
 
     if (updates.length === 0) {
@@ -442,7 +516,7 @@ const updatePost = async (req, res) => {
       UPDATE posts 
       SET ${updates.join(', ')}
       WHERE id = $${paramCount}
-      RETURNING id, author_id, title, content, llm_tag, is_prompt_post, created_at, updated_at
+      RETURNING id, author_id, title, content, prompt_section, description_section, llm_tag, is_prompt_post, created_at, updated_at
     `;
 
     const result = await query(queryText, values);

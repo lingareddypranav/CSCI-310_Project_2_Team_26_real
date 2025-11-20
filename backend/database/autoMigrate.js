@@ -114,8 +114,48 @@ async function autoMigrate() {
     // Check if tables already exist
     const tablesExist = await checkTablesExist();
     
+    // Always run incremental migrations (they check for column existence)
+    const migrationsDir = path.join(__dirname, 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const migrationFiles = fs.readdirSync(migrationsDir)
+        .filter(file => file.endsWith('.sql'))
+        .sort();
+      
+      if (migrationFiles.length > 0) {
+        console.log('🔄 Running incremental migrations...');
+        for (const file of migrationFiles) {
+          const migrationPath = path.join(migrationsDir, file);
+          console.log(`📝 Running migration: ${file}`);
+          const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+          const migrationStatements = parseSQLStatements(migrationSQL);
+          
+          for (const statement of migrationStatements) {
+            if (statement.trim()) {
+              try {
+                await query(statement);
+              } catch (error) {
+                // Ignore "already exists" or "column already exists" errors
+                if (error.message.includes('already exists') || 
+                    error.message.includes('duplicate') ||
+                    (error.message.includes('column') && error.message.includes('already exists')) ||
+                    error.code === '42P07' || // PostgreSQL "relation already exists"
+                    error.code === '42710' || // PostgreSQL "duplicate object"
+                    error.code === '42701') { // PostgreSQL "duplicate column"
+                  // Silently skip - column already exists
+                } else {
+                  console.error(`  ❌ Migration error in ${file}:`, error.message);
+                  // Continue with other migrations even if one fails
+                }
+              }
+            }
+          }
+        }
+        console.log('✅ Incremental migrations completed');
+      }
+    }
+    
     if (tablesExist) {
-      console.log('✅ Database schema already exists - skipping migration');
+      console.log('✅ Database schema already exists - skipping initial migration');
       migrationRun = true;
       return { success: true, skipped: true, message: 'Schema already exists' };
     }

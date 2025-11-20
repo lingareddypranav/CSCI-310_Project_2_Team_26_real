@@ -40,6 +40,7 @@ public class ProfileSettingsFragment extends Fragment {
 
         binding.saveButton.setOnClickListener(v -> onSaveClicked());
         binding.resetPasswordButton.setOnClickListener(v -> onResetPasswordClicked());
+        binding.logoutButton.setOnClickListener(v -> onLogoutClicked());
 
         observeViewModel();
         if (!TextUtils.isEmpty(userId)) {
@@ -136,6 +137,31 @@ public class ProfileSettingsFragment extends Fragment {
             Toast.makeText(requireContext(), displayMessage, Toast.LENGTH_LONG).show();
         }
         lastAction = Action.NONE;
+    }
+
+    private void onLogoutClicked() {
+        // Show confirmation dialog
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.profile_settings_logout)
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton(R.string.profile_settings_logout, (dialog, which) -> {
+                    // Clear session
+                    com.example.csci_310project2team26.data.repository.AuthRepository authRepository = 
+                        new com.example.csci_310project2team26.data.repository.AuthRepository();
+                    authRepository.logout();
+                    
+                    // Navigate to login activity
+                    android.content.Intent intent = new android.content.Intent(requireContext(), 
+                        com.example.csci_310project2team26.ui.auth.LoginActivity.class);
+                    intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | 
+                                  android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    if (getActivity() != null) {
+                        getActivity().finish();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     @Override

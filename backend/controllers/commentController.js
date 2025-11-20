@@ -16,6 +16,7 @@ const getCommentsByPost = async (req, res) => {
         c.post_id,
         c.author_id,
         u.name as author_name,
+        c.title,
         c.text,
         c.created_at,
         c.updated_at,
@@ -47,7 +48,7 @@ const getCommentsByPost = async (req, res) => {
 const createComment = async (req, res) => {
   try {
     const authorId = req.user.userId;
-    const { post_id, text } = req.body;
+    const { post_id, text, title } = req.body;
 
     // Validation
     if (!post_id || !text) {
@@ -70,12 +71,12 @@ const createComment = async (req, res) => {
       });
     }
 
-    // Insert comment
+    // Insert comment (title is optional)
     const result = await query(
-      `INSERT INTO comments (post_id, author_id, text)
-       VALUES ($1, $2, $3)
-       RETURNING id, post_id, author_id, text, created_at, updated_at`,
-      [post_id, authorId, text]
+      `INSERT INTO comments (post_id, author_id, text, title)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, post_id, author_id, title, text, created_at, updated_at`,
+      [post_id, authorId, text, title || null]
     );
 
     res.status(201).json({
@@ -96,7 +97,7 @@ const updateComment = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { text } = req.body;
+    const { text, title } = req.body;
 
     // Validation
     if (!text) {
@@ -128,10 +129,10 @@ const updateComment = async (req, res) => {
     // Update comment
     const result = await query(
       `UPDATE comments 
-       SET text = $1
-       WHERE id = $2
-       RETURNING id, post_id, author_id, text, created_at, updated_at`,
-      [text, id]
+       SET text = $1, title = $2
+       WHERE id = $3
+       RETURNING id, post_id, author_id, title, text, created_at, updated_at`,
+      [text, title || null, id]
     );
 
     res.json({
@@ -187,8 +188,48 @@ const deleteComment = async (req, res) => {
   }
 };
 
+// Get comments by user ID
+const getCommentsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await query(
+      `SELECT 
+        c.id,
+        c.post_id,
+        c.author_id,
+        u.name as author_name,
+        c.title,
+        c.text,
+        c.created_at,
+        c.updated_at,
+        COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes
+      FROM comments c
+      LEFT JOIN users u ON c.author_id = u.id
+      LEFT JOIN votes v ON v.comment_id = c.id
+      WHERE c.author_id = $1
+      GROUP BY c.id, u.name
+      ORDER BY c.created_at DESC`,
+      [userId]
+    );
+
+    res.json({
+      comments: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Get comments by user error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to get comments'
+    });
+  }
+};
+
 module.exports = {
   getCommentsByPost,
+  getCommentsByUser,
   createComment,
   updateComment,
   deleteComment

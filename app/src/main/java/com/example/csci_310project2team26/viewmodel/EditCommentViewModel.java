@@ -53,13 +53,17 @@ public class EditCommentViewModel extends ViewModel {
     }
 
     public void updateComment(String postId, String commentId, String text) {
+        updateComment(postId, commentId, text, null);
+    }
+
+    public void updateComment(String postId, String commentId, String text, String title) {
         if (postId == null || commentId == null) {
             return;
         }
         loading.postValue(true);
         error.postValue(null);
         updatedComment.postValue(null);
-        commentRepository.updateComment(postId, commentId, text, new CommentRepository.Callback<Comment>() {
+        commentRepository.updateComment(postId, commentId, text, title, new CommentRepository.Callback<Comment>() {
             @Override
             public void onSuccess(Comment result) {
                 loading.postValue(false);

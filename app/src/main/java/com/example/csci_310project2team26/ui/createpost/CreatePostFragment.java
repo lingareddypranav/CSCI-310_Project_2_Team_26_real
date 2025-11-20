@@ -29,7 +29,42 @@ public class CreatePostFragment extends Fragment {
         binding = FragmentCreatePostBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
 
+        // Always start with prompt mode off to avoid leaking prior state when navigating back to
+        // this screen.
+        binding.promptSwitch.setChecked(false);
+        if (binding.promptSectionLayout != null) {
+            binding.promptSectionLayout.setVisibility(View.GONE);
+        }
+        if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
+            ((View) binding.bodyEditText.getParent()).setVisibility(View.VISIBLE);
+        }
+
         binding.publishButton.setOnClickListener(v -> onPublishClicked());
+
+        // Show/hide prompt fields based on toggle
+        binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (binding.promptSectionLayout != null) {
+                binding.promptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+
+            // When turning prompt mode off, clear any lingering prompt content so it isn't
+            // accidentally submitted or used to infer a prompt post type on the backend.
+            if (!isChecked) {
+                if (binding.promptSectionEditText != null) {
+                    binding.promptSectionEditText.setText("");
+                }
+                if (binding.descriptionSectionEditText != null) {
+                    binding.descriptionSectionEditText.setText("");
+                }
+            }
+
+            // Hide the normal body field for prompt posts and show it for regular posts
+            if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
+                View bodyContainer = (View) binding.bodyEditText.getParent();
+                bodyContainer.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+            }
+        });
+        
         observeViewModel();
 
         return binding.getRoot();
@@ -43,6 +78,12 @@ public class CreatePostFragment extends Fragment {
             binding.bodyEditText.setEnabled(!inFlight);
             binding.tagEditText.setEnabled(!inFlight);
             binding.promptSwitch.setEnabled(!inFlight);
+            if (binding.promptSectionEditText != null) {
+                binding.promptSectionEditText.setEnabled(!inFlight);
+            }
+            if (binding.descriptionSectionEditText != null) {
+                binding.descriptionSectionEditText.setEnabled(!inFlight);
+            }
         });
 
         viewModel.getError().observe(getViewLifecycleOwner(), error -> {
@@ -59,8 +100,17 @@ public class CreatePostFragment extends Fragment {
         String body = binding.bodyEditText.getText() != null ? binding.bodyEditText.getText().toString() : "";
         String tag = binding.tagEditText.getText() != null ? binding.tagEditText.getText().toString() : "";
         boolean isPrompt = binding.promptSwitch.isChecked();
+        
+        String promptSection = null;
+        String descriptionSection = null;
+        if (isPrompt && binding.promptSectionEditText != null && binding.descriptionSectionEditText != null) {
+            promptSection = binding.promptSectionEditText.getText() != null ? 
+                binding.promptSectionEditText.getText().toString() : "";
+            descriptionSection = binding.descriptionSectionEditText.getText() != null ? 
+                binding.descriptionSectionEditText.getText().toString() : "";
+        }
 
-        viewModel.createPost(title, body, tag, isPrompt);
+        viewModel.createPost(title, body, tag, isPrompt, promptSection, descriptionSection);
     }
 
     private void handlePostCreated(Post post) {
@@ -74,14 +124,26 @@ public class CreatePostFragment extends Fragment {
         }
         
         Toast.makeText(requireContext(), R.string.create_post_success, Toast.LENGTH_SHORT).show();
+        
+        // Clear form to allow creating another post
         binding.titleEditText.setText("");
         binding.bodyEditText.setText("");
         binding.tagEditText.setText("");
         binding.promptSwitch.setChecked(false);
-
-        Bundle args = new Bundle();
-        args.putString("postId", postId);
-        Navigation.findNavController(binding.getRoot()).navigate(R.id.postDetailFragment, args);
+        
+        // Clear and hide prompt/description fields
+        if (binding.promptSectionEditText != null) {
+            binding.promptSectionEditText.setText("");
+        }
+        if (binding.descriptionSectionEditText != null) {
+            binding.descriptionSectionEditText.setText("");
+        }
+        if (binding.promptSectionLayout != null) {
+            binding.promptSectionLayout.setVisibility(View.GONE);
+        }
+        
+        // Stay on create post page instead of navigating away
+        // User can create multiple posts without restarting the app
     }
 
     @Override

@@ -15,6 +15,9 @@ public class Comment {
     @SerializedName("author_name")
     private String author_name;
     
+    @SerializedName("title")
+    private String title;
+    
     @SerializedName("text")
     private String text;
     
@@ -56,6 +59,7 @@ public class Comment {
     public String getPost_id() { return post_id; }
     public String getAuthor_id() { return author_id; }
     public String getAuthor_name() { return author_name; }
+    public String getTitle() { return title; }
     public String getText() { return text; }
     public String getCreated_at() { return created_at; }
     public String getUpdated_at() { return updated_at; }
@@ -66,6 +70,7 @@ public class Comment {
     public void setPost_id(String post_id) { this.post_id = post_id; }
     public void setAuthor_id(String author_id) { this.author_id = author_id; }
     public void setAuthor_name(String author_name) { this.author_name = author_name; }
+    public void setTitle(String title) { this.title = title; }
     public void setText(String text) { this.text = text; }
     public void setCreated_at(String created_at) { this.created_at = created_at; }
     public void setUpdated_at(String updated_at) { this.updated_at = updated_at; }

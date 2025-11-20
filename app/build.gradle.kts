@@ -46,6 +46,17 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    
+    // Testing dependencies
+    testImplementation("org.mockito:mockito-core:5.1.1")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    androidTestImplementation("org.mockito:mockito-android:5.1.1")
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    
+    // For testing Retrofit calls
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
 
     // NEW: ViewModel and LiveData (additional for Java compatibility)
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.1")

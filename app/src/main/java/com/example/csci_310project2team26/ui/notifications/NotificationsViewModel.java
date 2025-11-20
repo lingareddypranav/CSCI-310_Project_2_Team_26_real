@@ -25,6 +25,7 @@ public class NotificationsViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>(null);
     private final MutableLiveData<List<UserActivityItem>> activityItems = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<String> successMessage = new MutableLiveData<>(null);
 
     public LiveData<Boolean> getLoading() {
         return loading;
@@ -38,6 +39,14 @@ public class NotificationsViewModel extends ViewModel {
         return activityItems;
     }
 
+    public LiveData<String> getSuccessMessage() {
+        return successMessage;
+    }
+
+    public void clearSuccessMessage() {
+        successMessage.postValue(null);
+    }
+
     public void loadUserActivity(String userId) {
         if (TextUtils.isEmpty(userId)) {
             activityItems.postValue(new ArrayList<>());
@@ -46,6 +55,7 @@ public class NotificationsViewModel extends ViewModel {
 
         loading.postValue(true);
         error.postValue(null);
+        successMessage.postValue(null);
         activityItems.postValue(new ArrayList<>());
 
         postRepository.fetchPostsForUser(userId, new PostRepository.Callback<List<Post>>() {
@@ -74,6 +84,69 @@ public class NotificationsViewModel extends ViewModel {
         });
     }
 
+    public void deletePost(String postId) {
+        if (TextUtils.isEmpty(postId)) {
+            error.postValue("Post ID missing");
+            return;
+        }
+
+        loading.postValue(true);
+        postRepository.deletePost(postId, new PostRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                removeActivityItem(UserActivityItem.Type.POST, postId);
+                successMessage.postValue("Post deleted");
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err != null ? err : "Failed to delete post");
+            }
+        });
+    }
+
+    public void deleteComment(String commentId) {
+        if (TextUtils.isEmpty(commentId)) {
+            error.postValue("Comment ID missing");
+            return;
+        }
+
+        loading.postValue(true);
+        commentRepository.deleteComment(commentId, new CommentRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                removeActivityItem(UserActivityItem.Type.COMMENT, commentId);
+                successMessage.postValue("Comment deleted");
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err != null ? err : "Failed to delete comment");
+            }
+        });
+    }
+
+    private void removeActivityItem(UserActivityItem.Type type, String id) {
+        List<UserActivityItem> current = activityItems.getValue();
+        if (current == null || current.isEmpty()) {
+            return;
+        }
+
+        List<UserActivityItem> updated = new ArrayList<>();
+        for (UserActivityItem item : current) {
+            if (item == null) continue;
+            if (item.getType() == type && id.equals(item.getId())) {
+                continue;
+            }
+            updated.add(item);
+        }
+        activityItems.postValue(updated);
+    }
+
     private List<UserActivityItem> buildItems(List<Post> posts, List<Comment> comments) {
         List<UserActivityItem> items = new ArrayList<>();
         long now = System.currentTimeMillis();
@@ -99,10 +172,13 @@ public class NotificationsViewModel extends ViewModel {
 
         if (comments != null) {
             for (Comment comment : comments) {
-                long updated = parseTimestamp(comment.getUpdated_at());
-                String title = !TextUtils.isEmpty(comment.getText())
-                        ? truncate(comment.getText(), 80)
-                        : "(comment)";
+                long updated = parseTimestamp(comment.getCreated_at());
+                // Use title if available, otherwise use text
+                String title = !TextUtils.isEmpty(comment.getTitle())
+                        ? comment.getTitle()
+                        : (!TextUtils.isEmpty(comment.getText())
+                                ? truncate(comment.getText(), 80)
+                                : "(comment)");
                 String detail = !TextUtils.isEmpty(comment.getPost_id())
                         ? String.format(Locale.getDefault(), "Post: %s", comment.getPost_id())
                         : "";
@@ -126,10 +202,22 @@ public class NotificationsViewModel extends ViewModel {
             return 0L;
         }
         try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            return 0L;
+            // Try parsing as ISO 8601 date string
+            java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+            format.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date date = format.parse(value);
+            if (date != null) {
+                return date.getTime();
+            }
+        } catch (Exception e) {
+            // Try parsing as long timestamp
+            try {
+                return Long.parseLong(value);
+            } catch (NumberFormatException e2) {
+                return 0L;
+            }
         }
+        return 0L;
     }
 
     private String truncate(String value, int maxLength) {

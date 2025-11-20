@@ -66,12 +66,18 @@ public class EditCommentFragment extends Fragment {
             boolean inFlight = Boolean.TRUE.equals(loading);
             binding.saveCommentButton.setEnabled(!inFlight);
             binding.editCommentEditText.setEnabled(!inFlight);
+            if (binding.editCommentTitleEditText != null) {
+                binding.editCommentTitleEditText.setEnabled(!inFlight);
+            }
         });
     }
 
     private void populateComment(Comment comment) {
         if (comment == null) {
             return;
+        }
+        if (binding.editCommentTitleEditText != null) {
+            binding.editCommentTitleEditText.setText(comment.getTitle() != null ? comment.getTitle() : "");
         }
         binding.editCommentEditText.setText(comment.getText() != null ? comment.getText() : "");
     }
@@ -88,7 +94,18 @@ public class EditCommentFragment extends Fragment {
             Toast.makeText(requireContext(), R.string.edit_comment_error, Toast.LENGTH_LONG).show();
             return;
         }
-        viewModel.updateComment(postId, commentId, text);
+        
+        String title = null;
+        if (binding.editCommentTitleEditText != null) {
+            String titleText = binding.editCommentTitleEditText.getText() != null
+                    ? binding.editCommentTitleEditText.getText().toString().trim()
+                    : "";
+            if (!TextUtils.isEmpty(titleText)) {
+                title = titleText;
+            }
+        }
+        
+        viewModel.updateComment(postId, commentId, text, title);
     }
 
     @Override

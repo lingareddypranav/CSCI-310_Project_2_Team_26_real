@@ -39,7 +39,13 @@ public class SearchFragment extends Fragment {
     public static final String SEARCH_TYPE_FULL_TEXT = "full_text";
     public static final String SEARCH_TYPE_PROMPT_TAG = "prompt_tag";
 
+    // Post type filter constants
+    public static final String POST_TYPE_ALL = "all";
+    public static final String POST_TYPE_NORMAL = "normal";
+    public static final String POST_TYPE_PROMPT = "prompt";
+
     private String currentSearchType = SEARCH_TYPE_FULL_TEXT;
+    private String currentPostType = POST_TYPE_ALL;
 
     @Nullable
     @Override
@@ -119,6 +125,35 @@ public class SearchFragment extends Fragment {
             }
         });
 
+        // Setup post type filter spinner
+        ArrayAdapter<CharSequence> postTypeAdapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.post_type_filter,
+                android.R.layout.simple_spinner_item
+        );
+        postTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.postTypeSpinner.setAdapter(postTypeAdapter);
+
+        binding.postTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String[] postTypes = getResources().getStringArray(R.array.post_type_filter);
+                String selectedType = postTypes[position];
+                if ("All Posts".equals(selectedType)) {
+                    currentPostType = POST_TYPE_ALL;
+                } else if ("Normal Posts".equals(selectedType)) {
+                    currentPostType = POST_TYPE_NORMAL;
+                } else if ("Prompt Posts".equals(selectedType)) {
+                    currentPostType = POST_TYPE_PROMPT;
+                }
+                performSearch();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
         // Setup search text watcher
         searchWatcher = new TextWatcher() {
             @Override
@@ -169,11 +204,14 @@ public class SearchFragment extends Fragment {
             return;
         }
 
-        // Determine if this is a prompt search
+        // Determine post type filter
         Boolean isPromptPost = null;
-        if (SEARCH_TYPE_PROMPT_TAG.equals(currentSearchType)) {
+        if (POST_TYPE_PROMPT.equals(currentPostType)) {
             isPromptPost = true;
+        } else if (POST_TYPE_NORMAL.equals(currentPostType)) {
+            isPromptPost = false;
         }
+        // If POST_TYPE_ALL, isPromptPost remains null (search all)
 
         postsViewModel.searchPosts(
                 query,

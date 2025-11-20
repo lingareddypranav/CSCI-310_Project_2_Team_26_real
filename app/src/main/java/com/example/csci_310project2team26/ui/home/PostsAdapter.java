@@ -123,7 +123,12 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                 dateTextView.setText(dateText);
             }
 
-            contentTextView.setText(post.getContent() != null ? post.getContent() : "");
+            // For prompt posts, show prompt section preview; for regular posts, show content
+            if (post.isIs_prompt_post() && post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
+                contentTextView.setText(post.getPrompt_section());
+            } else {
+                contentTextView.setText(post.getContent() != null ? post.getContent() : "");
+            }
 
             int upvotes = Math.max(post.getUpvotes(), 0);
             int downvotes = Math.max(post.getDownvotes(), 0);

@@ -35,6 +35,18 @@ public class EditPostFragment extends Fragment {
         }
 
         binding.savePostButton.setOnClickListener(v -> onSaveClicked());
+        
+        // Show/hide prompt fields based on toggle
+        binding.editPromptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (binding.editPromptSectionLayout != null) {
+                binding.editPromptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+            // For prompt posts, body is optional
+            if (binding.editBodyEditText != null) {
+                binding.editBodyEditText.setHint(isChecked ? "Content (optional for prompt posts)" : getString(R.string.create_post_body_hint));
+            }
+        });
+        
         observeViewModel();
 
         if (TextUtils.isEmpty(postId)) {
@@ -67,6 +79,12 @@ public class EditPostFragment extends Fragment {
             binding.editBodyEditText.setEnabled(!inFlight);
             binding.editTagEditText.setEnabled(!inFlight);
             binding.editPromptSwitch.setEnabled(!inFlight);
+            if (binding.editPromptSectionEditText != null) {
+                binding.editPromptSectionEditText.setEnabled(!inFlight);
+            }
+            if (binding.editDescriptionSectionEditText != null) {
+                binding.editDescriptionSectionEditText.setEnabled(!inFlight);
+            }
         });
     }
 
@@ -75,9 +93,25 @@ public class EditPostFragment extends Fragment {
             return;
         }
         binding.editTitleEditText.setText(post.getTitle());
-        binding.editBodyEditText.setText(post.getContent());
+        binding.editBodyEditText.setText(post.getContent() != null ? post.getContent() : "");
         binding.editTagEditText.setText(post.getLlm_tag() != null ? post.getLlm_tag() : "");
-        binding.editPromptSwitch.setChecked(post.isIs_prompt_post());
+        boolean isPrompt = post.isIs_prompt_post();
+        binding.editPromptSwitch.setChecked(isPrompt);
+        
+        // Show/hide prompt fields based on post type
+        if (binding.editPromptSectionLayout != null) {
+            binding.editPromptSectionLayout.setVisibility(isPrompt ? View.VISIBLE : View.GONE);
+        }
+        
+        // Populate prompt sections if they exist
+        if (isPrompt) {
+            if (binding.editPromptSectionEditText != null) {
+                binding.editPromptSectionEditText.setText(post.getPrompt_section() != null ? post.getPrompt_section() : "");
+            }
+            if (binding.editDescriptionSectionEditText != null) {
+                binding.editDescriptionSectionEditText.setText(post.getDescription_section() != null ? post.getDescription_section() : "");
+            }
+        }
     }
 
     private void onSaveClicked() {
@@ -89,11 +123,38 @@ public class EditPostFragment extends Fragment {
         String body = binding.editBodyEditText.getText() != null ? binding.editBodyEditText.getText().toString() : "";
         String tag = binding.editTagEditText.getText() != null ? binding.editTagEditText.getText().toString() : "";
         boolean isPrompt = binding.editPromptSwitch.isChecked();
-        if (TextUtils.isEmpty(title) || TextUtils.isEmpty(body)) {
-            Toast.makeText(requireContext(), R.string.edit_post_error, Toast.LENGTH_LONG).show();
+        
+        String promptSection = null;
+        String descriptionSection = null;
+        if (isPrompt && binding.editPromptSectionEditText != null && binding.editDescriptionSectionEditText != null) {
+            promptSection = binding.editPromptSectionEditText.getText() != null ? 
+                binding.editPromptSectionEditText.getText().toString().trim() : "";
+            descriptionSection = binding.editDescriptionSectionEditText.getText() != null ? 
+                binding.editDescriptionSectionEditText.getText().toString().trim() : "";
+            if (promptSection.isEmpty()) promptSection = null;
+            if (descriptionSection.isEmpty()) descriptionSection = null;
+        }
+        
+        // Validation
+        if (TextUtils.isEmpty(title)) {
+            Toast.makeText(requireContext(), "Title is required", Toast.LENGTH_LONG).show();
             return;
         }
-        viewModel.updatePost(postId, title, body, tag, isPrompt);
+        
+        if (isPrompt) {
+            if ((promptSection == null || promptSection.isEmpty()) && 
+                (descriptionSection == null || descriptionSection.isEmpty())) {
+                Toast.makeText(requireContext(), "Prompt posts require either prompt section or description section", Toast.LENGTH_LONG).show();
+                return;
+            }
+        } else {
+            if (TextUtils.isEmpty(body)) {
+                Toast.makeText(requireContext(), "Content is required", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+        
+        viewModel.updatePost(postId, title, body, tag, isPrompt, promptSection, descriptionSection);
     }
 
     @Override

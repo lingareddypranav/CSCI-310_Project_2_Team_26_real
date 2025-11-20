@@ -18,6 +18,12 @@ public class Post {
     @SerializedName("content")
     private String content;
     
+    @SerializedName("prompt_section")
+    private String prompt_section;
+    
+    @SerializedName("description_section")
+    private String description_section;
+    
     @SerializedName("llm_tag")
     private String llm_tag;
     
@@ -72,6 +78,8 @@ public class Post {
     public String getAuthor_name() { return author_name; }
     public String getTitle() { return title; }
     public String getContent() { return content; }
+    public String getPrompt_section() { return prompt_section; }
+    public String getDescription_section() { return description_section; }
     public String getLlm_tag() { return llm_tag; }
     public boolean isIs_prompt_post() { return is_prompt_post; }
     public String getCreated_at() { return created_at; }
@@ -85,6 +93,8 @@ public class Post {
     public void setAuthor_name(String author_name) { this.author_name = author_name; }
     public void setTitle(String title) { this.title = title; }
     public void setContent(String content) { this.content = content; }
+    public void setPrompt_section(String prompt_section) { this.prompt_section = prompt_section; }
+    public void setDescription_section(String description_section) { this.description_section = description_section; }
     public void setLlm_tag(String llm_tag) { this.llm_tag = llm_tag; }
     public void setIs_prompt_post(boolean is_prompt_post) { this.is_prompt_post = is_prompt_post; }
     public void setCreated_at(String created_at) { this.created_at = created_at; }

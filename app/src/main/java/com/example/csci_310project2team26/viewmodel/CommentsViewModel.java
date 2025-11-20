@@ -49,11 +49,15 @@ public class CommentsViewModel extends ViewModel {
     }
 
     public void addComment(String postId, String text) {
+        addComment(postId, text, null);
+    }
+
+    public void addComment(String postId, String text, String title) {
         loading.postValue(true);
         error.postValue(null);
         latestPostedComment.postValue(null);
         postingComment.postValue(true);
-        commentRepository.createComment(postId, text, new CommentRepository.Callback<Comment>() {
+        commentRepository.createComment(postId, text, title, new CommentRepository.Callback<Comment>() {
             @Override
             public void onSuccess(Comment result) {
                 postingComment.postValue(false);
@@ -67,6 +71,44 @@ public class CommentsViewModel extends ViewModel {
             public void onError(String err) {
                 loading.postValue(false);
                 postingComment.postValue(false);
+                error.postValue(err);
+            }
+        });
+    }
+
+    public void editComment(String postId, String commentId, String text, String title) {
+        loading.postValue(true);
+        error.postValue(null);
+        commentRepository.updateComment(postId, commentId, text, title, new CommentRepository.Callback<Comment>() {
+            @Override
+            public void onSuccess(Comment result) {
+                loading.postValue(false);
+                // Reload comments to get updated data
+                loadComments(postId);
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+            }
+        });
+    }
+
+    public void deleteComment(String postId, String commentId) {
+        loading.postValue(true);
+        error.postValue(null);
+        commentRepository.deleteComment(commentId, new CommentRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                // Reload comments to reflect deletion
+                loadComments(postId);
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
                 error.postValue(err);
             }
         });

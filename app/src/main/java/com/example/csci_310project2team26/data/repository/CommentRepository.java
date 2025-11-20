@@ -104,7 +104,7 @@ public class CommentRepository {
     /**
      * Create a new comment
      */
-    public void createComment(String postId, String text, Callback<Comment> callback) {
+    public void createComment(String postId, String text, String title, Callback<Comment> callback) {
         executorService.execute(() -> {
             try {
                 String token = SessionManager.getToken();
@@ -116,7 +116,8 @@ public class CommentRepository {
                 retrofit2.Call<ApiService.CommentResponse> call = apiService.createComment(
                     "Bearer " + token,
                     postId,
-                    text
+                    text,
+                    title
                 );
                 
                 Response<ApiService.CommentResponse> response = call.execute();
@@ -215,15 +216,20 @@ public class CommentRepository {
 
     /**
      * Fetch comments by a specific user
-     * Note: Backend doesn't have this endpoint, so we fetch all comments and filter
      */
     public void fetchCommentsByUser(String userId, Callback<List<Comment>> callback) {
         executorService.execute(() -> {
             try {
-                // Since backend doesn't have a direct endpoint for this,
-                // we'll need to fetch comments from all posts user has commented on
-                // For now, return empty list - this feature would need backend support
-                callback.onSuccess(new ArrayList<>());
+                retrofit2.Call<ApiService.CommentsResponse> call = apiService.getCommentsByUser(userId);
+                Response<ApiService.CommentsResponse> response = call.execute();
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiService.CommentsResponse commentsResponse = response.body();
+                    List<Comment> comments = commentsResponse.comments != null ? commentsResponse.comments : new ArrayList<>();
+                    callback.onSuccess(comments);
+                } else {
+                    callback.onError("Failed to load comments");
+                }
             } catch (Exception e) {
                 callback.onError(e.getMessage() != null ? e.getMessage() : "Network error");
             }
@@ -268,6 +274,7 @@ public class CommentRepository {
     public void updateComment(String postId,
                               String commentId,
                               String newText,
+                              String newTitle,
                               Callback<Comment> callback) {
         executorService.execute(() -> {
             try {
@@ -280,7 +287,8 @@ public class CommentRepository {
                 retrofit2.Call<ApiService.CommentResponse> call = apiService.updateComment(
                     "Bearer " + token,
                     commentId,
-                    newText
+                    newText,
+                    newTitle
                 );
                 
                 Response<ApiService.CommentResponse> response = call.execute();

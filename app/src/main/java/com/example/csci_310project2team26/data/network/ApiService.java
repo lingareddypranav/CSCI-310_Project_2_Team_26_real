@@ -133,7 +133,9 @@ public interface ApiService {
         @Field("title") String title,
         @Field("content") String content,
         @Field("llm_tag") String llmTag,
-        @Field("is_prompt_post") boolean isPromptPost
+        @Field("is_prompt_post") boolean isPromptPost,
+        @Field("prompt_section") String promptSection,
+        @Field("description_section") String descriptionSection
     );
 
     @PUT("api/posts/{id}")
@@ -144,7 +146,9 @@ public interface ApiService {
         @Field("title") String title,
         @Field("content") String content,
         @Field("llm_tag") String llmTag,
-        @Field("is_prompt_post") Boolean isPromptPost
+        @Field("is_prompt_post") Boolean isPromptPost,
+        @Field("prompt_section") String promptSection,
+        @Field("description_section") String descriptionSection
     );
 
     @DELETE("api/posts/{id}")
@@ -154,15 +158,19 @@ public interface ApiService {
     );
 
     // Comments endpoints
-    @GET("api/comments/{postId}")
+    @GET("api/comments/post/{postId}")
     Call<CommentsResponse> getComments(@Path("postId") String postId);
+
+    @GET("api/comments/user/{userId}")
+    Call<CommentsResponse> getCommentsByUser(@Path("userId") String userId);
 
     @POST("api/comments")
     @FormUrlEncoded
     Call<CommentResponse> createComment(
         @Header("Authorization") String token,
         @Field("post_id") String postId,
-        @Field("text") String text
+        @Field("text") String text,
+        @Field("title") String title
     );
 
     @PUT("api/comments/{id}")
@@ -170,7 +178,8 @@ public interface ApiService {
     Call<CommentResponse> updateComment(
         @Header("Authorization") String token,
         @Path("id") String id,
-        @Field("text") String text
+        @Field("text") String text,
+        @Field("title") String title
     );
 
     @DELETE("api/comments/{id}")

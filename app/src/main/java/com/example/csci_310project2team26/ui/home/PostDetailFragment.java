@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.csci_310project2team26.R;
@@ -65,6 +66,28 @@ public class PostDetailFragment extends Fragment {
                     return; // Already processing a vote
                 }
                 commentsViewModel.voteOnComment(postId, comment.getId(), type);
+            }
+        });
+        commentsAdapter.setOnCommentEditListener(comment -> {
+            if (comment != null && comment.getId() != null && postId != null) {
+                // Navigate to edit comment fragment
+                Bundle args = new Bundle();
+                args.putString("postId", postId);
+                args.putString("commentId", comment.getId());
+                Navigation.findNavController(binding.getRoot()).navigate(R.id.editCommentFragment, args);
+            }
+        });
+        commentsAdapter.setOnCommentDeleteListener(comment -> {
+            if (comment != null && comment.getId() != null && postId != null && getContext() != null) {
+                // Show confirmation dialog
+                new android.app.AlertDialog.Builder(getContext())
+                        .setTitle("Delete Comment")
+                        .setMessage("Are you sure you want to delete this comment?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            commentsViewModel.deleteComment(postId, comment.getId());
+                        })
+                        .setNegativeButton(R.string.cancel, null)
+                        .show();
             }
         });
         binding.commentsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -126,10 +149,16 @@ public class PostDetailFragment extends Fragment {
             boolean inFlight = Boolean.TRUE.equals(posting);
             binding.addCommentButton.setEnabled(!inFlight);
             binding.commentEditText.setEnabled(!inFlight);
+            if (binding.commentTitleEditText != null) {
+                binding.commentTitleEditText.setEnabled(!inFlight);
+            }
         });
         commentsViewModel.getLatestPostedComment().observe(getViewLifecycleOwner(), comment -> {
             if (comment == null || binding == null) return;
             binding.commentEditText.setText("");
+            if (binding.commentTitleEditText != null) {
+                binding.commentTitleEditText.setText("");
+            }
             // Comments will be reloaded automatically by the ViewModel
             // Scroll to top after a brief delay to allow RecyclerView to update
             binding.commentsRecyclerView.post(() -> {
@@ -144,7 +173,65 @@ public class PostDetailFragment extends Fragment {
         if (binding == null || getContext() == null || post == null) return;
         
         binding.titleTextView.setText(post.getTitle() != null ? post.getTitle() : "");
-        binding.contentTextView.setText(post.getContent() != null ? post.getContent() : "");
+        
+        // Display content or prompt sections based on post type
+        boolean isPromptPost = post.isIs_prompt_post();
+        if (isPromptPost) {
+            // For prompt posts, show prompt_section and description_section
+            binding.contentTextView.setVisibility(View.GONE);
+            
+            if (post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
+                if (binding.promptSectionLabel != null) {
+                    binding.promptSectionLabel.setVisibility(View.VISIBLE);
+                }
+                if (binding.promptSectionTextView != null) {
+                    binding.promptSectionTextView.setText(post.getPrompt_section());
+                    binding.promptSectionTextView.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (binding.promptSectionLabel != null) {
+                    binding.promptSectionLabel.setVisibility(View.GONE);
+                }
+                if (binding.promptSectionTextView != null) {
+                    binding.promptSectionTextView.setVisibility(View.GONE);
+                }
+            }
+            
+            if (post.getDescription_section() != null && !post.getDescription_section().trim().isEmpty()) {
+                if (binding.descriptionSectionLabel != null) {
+                    binding.descriptionSectionLabel.setVisibility(View.VISIBLE);
+                }
+                if (binding.descriptionSectionTextView != null) {
+                    binding.descriptionSectionTextView.setText(post.getDescription_section());
+                    binding.descriptionSectionTextView.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (binding.descriptionSectionLabel != null) {
+                    binding.descriptionSectionLabel.setVisibility(View.GONE);
+                }
+                if (binding.descriptionSectionTextView != null) {
+                    binding.descriptionSectionTextView.setVisibility(View.GONE);
+                }
+            }
+        } else {
+            // For regular posts, show content
+            binding.contentTextView.setVisibility(View.VISIBLE);
+            binding.contentTextView.setText(post.getContent() != null ? post.getContent() : "");
+            
+            // Hide prompt sections
+            if (binding.promptSectionLabel != null) {
+                binding.promptSectionLabel.setVisibility(View.GONE);
+            }
+            if (binding.promptSectionTextView != null) {
+                binding.promptSectionTextView.setVisibility(View.GONE);
+            }
+            if (binding.descriptionSectionLabel != null) {
+                binding.descriptionSectionLabel.setVisibility(View.GONE);
+            }
+            if (binding.descriptionSectionTextView != null) {
+                binding.descriptionSectionTextView.setVisibility(View.GONE);
+            }
+        }
 
         Resources resources = getResources();
         String author = post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
@@ -224,7 +311,18 @@ public class PostDetailFragment extends Fragment {
                 ? binding.commentEditText.getText().toString().trim() 
                 : "";
         if (TextUtils.isEmpty(text)) return;
-        commentsViewModel.addComment(postId, text);
+        
+        String title = null;
+        if (binding.commentTitleEditText != null) {
+            String titleText = binding.commentTitleEditText.getText() != null 
+                    ? binding.commentTitleEditText.getText().toString().trim() 
+                    : "";
+            if (!TextUtils.isEmpty(titleText)) {
+                title = titleText;
+            }
+        }
+        
+        commentsViewModel.addComment(postId, text, title);
     }
 
     private void focusOnCommentField() {
