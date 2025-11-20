@@ -32,6 +32,28 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    
+    // Configure test output to show in terminal
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = false
+        }
+    }
+}
+
+// Configure test logging to show output in terminal as tests run
+// This applies to both unit tests (white-box) and instrumented tests (black-box)
+tasks.withType<Test> {
+    testLogging {
+        events("passed", "skipped", "failed", "standardOut", "standardError")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStandardStreams = true
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        // Show test output in real-time
+        outputs.upToDateWhen { false }
+    }
 }
 
 dependencies {

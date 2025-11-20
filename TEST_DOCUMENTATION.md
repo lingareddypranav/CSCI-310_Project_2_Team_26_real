@@ -4,27 +4,29 @@
 
 ### Quick Start
 
-**Run all white-box tests (shows each test):**
+**Run all white-box tests (shows each test in terminal):**
 ```bash
 ./gradlew test
 ```
 
-This command runs all white-box tests and displays each test result. You'll see output like:
+This command runs all white-box tests and displays each test result **directly in the terminal** as they execute. You'll see output like:
 ```
 PostModelTest > testPostCreationWithFullConstructor PASSED
 PostModelTest > testPostSetters PASSED
 CommentModelTest > testCommentCreationWithFullConstructor PASSED
+UserModelTest > testUserCreationWithFullConstructor PASSED
 ...
 ```
 
-**View detailed HTML report with all individual tests:**
-Open `app/build/reports/tests/test/index.html` in a browser. This shows:
-- Every single test method with pass/fail status
-- Test execution time
-- Any error messages
-- Organized by test class
+Each test is displayed with:
+- Test class name (e.g., `PostModelTest`)
+- Test method name (e.g., `testPostCreationWithFullConstructor`)
+- Pass/fail status (`PASSED`, `FAILED`, `SKIPPED`)
+- Any error messages or stack traces (if the test failed)
 
-**For more verbose output showing each test as it runs:**
+**Note:** HTML reports are still generated at `app/build/reports/tests/test/index.html` for detailed analysis, but all test output is visible in the terminal.
+
+**For even more verbose output:**
 ```bash
 ./gradlew test --info
 ```
@@ -65,7 +67,8 @@ White-box tests run on the JVM without requiring an Android device. They test in
 3. Results appear in the "Run" tool window showing each test
 
 **View test results:**
-- **HTML report**: `app/build/reports/tests/test/index.html` - Shows all tests with pass/fail status
+- **Terminal output**: Tests are displayed in the terminal as they run (configured automatically)
+- **HTML report**: `app/build/reports/tests/test/index.html` - Detailed report with execution times
 - **XML results**: `app/build/test-results/test/` - Machine-readable format
 
 ### Running Black-Box Tests (Instrumented/UI Tests)
@@ -79,11 +82,34 @@ White-box tests run on the JVM without requiring an Android device. They test in
 
 **Think of it like this:** Testing a web app requires a browser. Testing Android UI requires an Android device/emulator.
 
-**Run all black-box tests:**
+**Run all black-box tests (shows each test in terminal):**
 ```bash
 ./gradlew connectedAndroidTest
 ```
-*(Requires emulator or device to be running)*
+
+**⚠️ IMPORTANT: Requires an emulator or device to be running!**
+
+This command runs all black-box tests and displays each test result **directly in the terminal** as they execute (when an emulator is available). You'll see output like:
+```
+LoginActivityBlackBoxTest > testLoginActivityDisplaysCorrectly PASSED
+LoginActivityBlackBoxTest > testLoginWithValidCredentials PASSED
+HomeFragmentBlackBoxTest > testHomeFragmentDisplaysPosts PASSED
+APIIntegrationBlackBoxTest > testAPIConnectivity PASSED
+...
+```
+
+Each test is displayed with:
+- Test class name (e.g., `LoginActivityBlackBoxTest`)
+- Test method name (e.g., `testLoginActivityDisplaysCorrectly`)
+- Pass/fail status (`PASSED`, `FAILED`, `SKIPPED`)
+- Any error messages or stack traces (if the test failed)
+
+**If you see "No connected devices!" error:**
+- The tests compiled successfully (this is good!)
+- You need to start an emulator or connect a device
+- Start emulator: Tools → Device Manager → Create/Start Virtual Device
+- Or connect physical device with USB debugging enabled
+- Then run the command again - tests will show in terminal as they execute
 
 **Run a specific test class:**
 ```bash

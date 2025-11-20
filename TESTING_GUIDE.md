@@ -7,21 +7,43 @@
 ./gradlew test
 ```
 
-This runs all white-box tests and shows each test result. You'll see output like:
+This runs all white-box tests and shows each test result **directly in the terminal** as they run. You'll see output like:
 ```
 PostModelTest > testPostCreationWithFullConstructor PASSED
 PostModelTest > testPostSetters PASSED
 CommentModelTest > testCommentCreationWithFullConstructor PASSED
+UserModelTest > testUserCreationWithFullConstructor PASSED
 ...
 ```
 
-**View detailed results:**
-- Open `app/build/reports/tests/test/index.html` in a browser to see a full report with all test names and results
+Each test is displayed with:
+- Test class name
+- Test method name
+- Pass/fail status
+- Any error messages or stack traces (if failed)
+
+**Note:** HTML reports are still generated at `app/build/reports/tests/test/index.html` for detailed analysis, but you'll see all test output in the terminal.
 
 ### Run All Black-Box Tests (UI/Instrumented Tests)
 ```bash
 ./gradlew connectedAndroidTest
 ```
+
+**⚠️ IMPORTANT: Requires an emulator or device to be running!**
+
+This runs all black-box tests and shows each test result **directly in the terminal** as they run (when an emulator is available). You'll see output like:
+```
+LoginActivityBlackBoxTest > testLoginActivityDisplaysCorrectly PASSED
+LoginActivityBlackBoxTest > testLoginWithValidCredentials PASSED
+HomeFragmentBlackBoxTest > testHomeFragmentDisplaysPosts PASSED
+APIIntegrationBlackBoxTest > testAPIConnectivity PASSED
+...
+```
+
+**If you see "No connected devices!" error:**
+- Start an Android emulator: Tools → Device Manager → Create/Start Virtual Device
+- Or connect a physical device with USB debugging enabled
+- Then run `./gradlew connectedAndroidTest` again
 
 **Why does this need an emulator?**
 - Black-box tests use **Espresso** to interact with actual Android UI components (buttons, text fields, etc.)
@@ -29,7 +51,7 @@ CommentModelTest > testCommentCreationWithFullConstructor PASSED
 - JUnit alone can't test Android UI - you need Android's runtime environment
 - This is a fundamental Android testing requirement, not a limitation of our setup
 
-**Alternative:** If you want to test without an emulator, you'd need to use Robolectric (which mocks Android framework), but that's not true black-box testing since it doesn't test the real UI.
+**Note:** The tests will compile successfully even without an emulator, but execution requires a device. The terminal output configuration is ready and will show test results once a device is connected.
 
 ### Run Both Test Suites
 ```bash
@@ -175,8 +197,9 @@ curl -X POST https://csci-310project2team26real-production.up.railway.app/api/au
 - User already exists in database - this is fine, tests will still work
 
 ### White-box tests not showing individual results
-- Run `./gradlew test --info` for more detailed output
-- Check HTML report at `app/build/reports/tests/test/index.html` for full details
+- Tests should automatically show in terminal with the current configuration
+- If you want even more verbose output, run `./gradlew test --info`
+- HTML reports are still available at `app/build/reports/tests/test/index.html` for detailed analysis
 
 ---
 

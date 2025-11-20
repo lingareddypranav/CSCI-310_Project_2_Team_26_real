@@ -188,6 +188,7 @@ public class APIIntegrationBlackBoxTest {
         final String[] error = new String[1];
         
         postRepository.createPost("Test Title", "Test Content", "GPT-4", false,
+                                 null, null, // promptSection and descriptionSection are null for regular posts
                                  new PostRepository.Callback<Post>() {
             @Override
             public void onSuccess(Post post) {
