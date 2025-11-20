@@ -217,15 +217,22 @@ public class PostRepository {
                     callback.onError("Authentication required");
                     return;
                 }
-                
+
+                // Normalize fields to avoid sending nulls in form data
+                String safeTitle = title != null ? title.trim() : "";
+                String safeContent = content != null ? content.trim() : "";
+                String safeLlmTag = llmTag != null ? llmTag.trim() : "";
+                String safePromptSection = promptSection != null ? promptSection.trim() : "";
+                String safeDescriptionSection = descriptionSection != null ? descriptionSection.trim() : "";
+
                 retrofit2.Call<ApiService.PostResponse> call = apiService.createPost(
                     "Bearer " + token,
-                    title,
-                    content,
-                    llmTag,
+                    safeTitle,
+                    safeContent,
+                    safeLlmTag,
                     isPromptPost,
-                    promptSection,
-                    descriptionSection
+                    safePromptSection,
+                    safeDescriptionSection
                 );
                 
                 Response<ApiService.PostResponse> response = call.execute();

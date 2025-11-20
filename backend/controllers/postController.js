@@ -336,10 +336,15 @@ const getPostById = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     const authorId = req.user.userId;
-    const { title, content, llm_tag, is_prompt_post, prompt_section, description_section } = req.body;
+    // Normalize and trim incoming payload to avoid accepting empty whitespace
+    const title = (req.body.title || '').trim();
+    const content = (req.body.content || '').trim();
+    const llm_tag = (req.body.llm_tag || '').trim();
+    const prompt_section = (req.body.prompt_section || '').trim();
+    const description_section = (req.body.description_section || '').trim();
 
     // Ensure is_prompt_post is treated as a boolean even when sent as a string from form data
-    const isPromptPost = is_prompt_post === true || is_prompt_post === 'true';
+    const isPromptPost = req.body.is_prompt_post === true || req.body.is_prompt_post === 'true';
 
     // Validation
     if (!title || !llm_tag) {
@@ -372,7 +377,15 @@ const createPost = async (req, res) => {
       `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [authorId, title, content || null, llm_tag, isPromptPost || false, prompt_section || null, description_section || null]
+      [
+        authorId,
+        title,
+        content || null,
+        llm_tag,
+        isPromptPost || false,
+        prompt_section || null,
+        description_section || null
+      ]
     );
 
     const postId = insertResult.rows[0].id;
