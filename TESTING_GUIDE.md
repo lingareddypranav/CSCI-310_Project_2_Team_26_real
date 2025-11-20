@@ -2,15 +2,34 @@
 
 ## Quick Start: Running Tests
 
-### Run All White-Box Tests (Unit Tests)
+### Run All White-Box Tests (Unit Tests) - Simple Command
 ```bash
 ./gradlew test
 ```
 
-### Run All Black-Box Tests (Instrumented Tests - Requires Device/Emulator)
+This runs all white-box tests and shows each test result. You'll see output like:
+```
+PostModelTest > testPostCreationWithFullConstructor PASSED
+PostModelTest > testPostSetters PASSED
+CommentModelTest > testCommentCreationWithFullConstructor PASSED
+...
+```
+
+**View detailed results:**
+- Open `app/build/reports/tests/test/index.html` in a browser to see a full report with all test names and results
+
+### Run All Black-Box Tests (UI/Instrumented Tests)
 ```bash
 ./gradlew connectedAndroidTest
 ```
+
+**Why does this need an emulator?**
+- Black-box tests use **Espresso** to interact with actual Android UI components (buttons, text fields, etc.)
+- Espresso requires the **Android framework** to be running, which only exists on Android devices/emulators
+- JUnit alone can't test Android UI - you need Android's runtime environment
+- This is a fundamental Android testing requirement, not a limitation of our setup
+
+**Alternative:** If you want to test without an emulator, you'd need to use Robolectric (which mocks Android framework), but that's not true black-box testing since it doesn't test the real UI.
 
 ### Run Both Test Suites
 ```bash
@@ -22,18 +41,42 @@
 # White-box example
 ./gradlew test --tests "com.example.csci_310project2team26.data.model.PostModelTest"
 
-# Black-box example
+# Black-box example (requires emulator)
 ./gradlew connectedAndroidTest --tests "com.example.csci_310project2team26.ui.auth.LoginActivityBlackBoxTest"
 ```
 
 ### In Android Studio
-1. Right-click on `app/src/test/java/` → "Run Tests" (for white-box)
-2. Right-click on `app/src/androidTest/java/` → "Run Tests" (for black-box)
-3. Click green play button next to any test class/method
+1. **White-box tests**: Right-click on `app/src/test/java/` → "Run Tests"
+2. **Black-box tests**: Right-click on `app/src/androidTest/java/` → "Run Tests" (requires emulator running)
+3. Click green play button ▶️ next to any test class/method
 
 ## Test Reports Location
-- **Unit Tests**: `app/build/reports/tests/test/index.html`
-- **Instrumented Tests**: `app/build/reports/androidTests/connected/index.html`
+- **Unit Tests (White-box)**: `app/build/reports/tests/test/index.html`
+- **Instrumented Tests (Black-box)**: `app/build/reports/androidTests/connected/index.html`
+
+---
+
+## Understanding Test Types
+
+### White-Box Tests (Unit Tests)
+- **Location**: `app/src/test/java/`
+- **Framework**: JUnit 4
+- **Runs on**: JVM (no Android device needed)
+- **What they test**: Individual classes, methods, data models
+- **Example**: Testing that a Post object correctly stores and retrieves data
+
+### Black-Box Tests (Instrumented/UI Tests)
+- **Location**: `app/src/androidTest/java/`
+- **Framework**: JUnit 4 + Espresso + AndroidJUnit4
+- **Runs on**: Android device/emulator (required)
+- **What they test**: User interactions, UI behavior, end-to-end flows
+- **Example**: Testing that clicking a login button actually logs the user in
+
+**Why Espresso needs an emulator:**
+- Espresso interacts with real Android Views (TextView, Button, etc.)
+- These Views are part of the Android framework, not Java
+- The Android framework only runs on Android devices/emulators
+- It's like testing a web app - you need a browser to test browser features
 
 ---
 
@@ -90,17 +133,17 @@ curl -X POST https://csci-310project2team26real-production.up.railway.app/api/au
 
 ## Test Structure
 
-### White-Box Tests (66 tests)
+### White-Box Tests (68 tests)
 **Location**: `app/src/test/java/com/example/csci_310project2team26/`
-- **PostModelTest**: 10 tests
-- **CommentModelTest**: 9 tests
+- **PostModelTest**: 12 tests
+- **CommentModelTest**: 10 tests
 - **UserModelTest**: 8 tests
 - **ProfileModelTest**: 9 tests
 - **SessionManagerTest**: 7 tests
 - **AuthRepositoryTest**: 10 tests
 - **PostRepositoryTest**: 12 tests
 
-### Black-Box Tests (29 tests)
+### Black-Box Tests (28 tests)
 **Location**: `app/src/androidTest/java/com/example/csci_310project2team26/`
 - **LoginActivityBlackBoxTest**: 11 tests
 - **HomeFragmentBlackBoxTest**: 7 tests
@@ -111,7 +154,7 @@ curl -X POST https://csci-310project2team26real-production.up.railway.app/api/au
 ## Prerequisites
 
 1. **Backend Server**: Must be running at `https://csci-310project2team26real-production.up.railway.app/`
-2. **Android Device/Emulator**: Required for black-box tests (API level 24+)
+2. **Android Device/Emulator**: Required ONLY for black-box tests (API level 24+)
 3. **Test Users**: Add the 3 test users above to your database
 
 ---
@@ -121,6 +164,7 @@ curl -X POST https://csci-310project2team26real-production.up.railway.app/api/au
 ### "No devices found" (Black-box tests)
 - Start Android emulator: Tools → Device Manager → Create/Start Virtual Device
 - Or connect physical device with USB debugging enabled
+- **Note**: This is required because Espresso needs the Android framework to test UI
 
 ### Network/Authentication test failures
 - Ensure backend server is running
@@ -130,12 +174,26 @@ curl -X POST https://csci-310project2team26real-production.up.railway.app/api/au
 ### Tests fail with "email already exists"
 - User already exists in database - this is fine, tests will still work
 
+### White-box tests not showing individual results
+- Run `./gradlew test --info` for more detailed output
+- Check HTML report at `app/build/reports/tests/test/index.html` for full details
+
 ---
 
 ## Test Frameworks Used
 
 - **JUnit 4**: Core testing framework (all tests)
 - **AndroidJUnit4**: Android test runner (black-box tests)
-- **Espresso**: UI testing framework (black-box UI tests)
+- **Espresso**: UI testing framework (black-box UI tests) - requires Android device
 - **Mockito**: Mocking framework (available but not heavily used)
 
+---
+
+## Quick Reference
+
+| Command | What It Does | Needs Emulator? |
+|---------|--------------|------------------|
+| `./gradlew test` | Run all white-box tests | ❌ No |
+| `./gradlew connectedAndroidTest` | Run all black-box tests | ✅ Yes |
+| `./gradlew test --tests "PostModelTest"` | Run specific white-box test class | ❌ No |
+| `./gradlew connectedAndroidTest --tests "LoginActivityBlackBoxTest"` | Run specific black-box test class | ✅ Yes |

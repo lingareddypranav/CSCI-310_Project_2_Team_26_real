@@ -2,15 +2,47 @@
 
 ## Instructions on How to Execute Test Cases
 
+### Quick Start
+
+**Run all white-box tests (shows each test):**
+```bash
+./gradlew test
+```
+
+This command runs all white-box tests and displays each test result. You'll see output like:
+```
+PostModelTest > testPostCreationWithFullConstructor PASSED
+PostModelTest > testPostSetters PASSED
+CommentModelTest > testCommentCreationWithFullConstructor PASSED
+...
+```
+
+**View detailed HTML report with all individual tests:**
+Open `app/build/reports/tests/test/index.html` in a browser. This shows:
+- Every single test method with pass/fail status
+- Test execution time
+- Any error messages
+- Organized by test class
+
+**For more verbose output showing each test as it runs:**
+```bash
+./gradlew test --info
+```
+
+**Run all black-box tests (requires emulator):**
+```bash
+./gradlew connectedAndroidTest
+```
+
 ### Prerequisites
 1. **Android SDK**: Ensure Android SDK is installed and `ANDROID_HOME` environment variable is set
-2. **Device/Emulator**: For black-box tests, an Android emulator or physical device must be running
+2. **Device/Emulator**: For black-box tests ONLY - an Android emulator or physical device must be running
 3. **Backend Server**: For API integration tests, ensure the backend is running at: `https://csci-310project2team26real-production.up.railway.app/`
 4. **Test Users**: Some tests require valid test credentials in the database (see TESTING_GUIDE.md)
 
 ### Running White-Box Tests (Unit Tests)
 
-White-box tests run on the JVM without requiring an Android device.
+White-box tests run on the JVM without requiring an Android device. They test individual classes and methods.
 
 **Run all white-box tests:**
 ```bash
@@ -22,23 +54,36 @@ White-box tests run on the JVM without requiring an Android device.
 ./gradlew test --tests "com.example.csci_310project2team26.data.model.PostModelTest"
 ```
 
+**Run a specific test method:**
+```bash
+./gradlew test --tests "com.example.csci_310project2team26.data.model.PostModelTest.testPostCreationWithFullConstructor"
+```
+
 **Run tests in Android Studio:**
-1. Right-click on `app/src/test/java/` folder
-2. Select "Run Tests"
-3. Or right-click on a specific test class/method and select "Run"
+1. Right-click on `app/src/test/java/` folder → "Run Tests"
+2. Or right-click on a specific test class/method → "Run"
+3. Results appear in the "Run" tool window showing each test
 
 **View test results:**
-- HTML report: `app/build/reports/tests/test/index.html`
-- XML results: `app/build/test-results/test/`
+- **HTML report**: `app/build/reports/tests/test/index.html` - Shows all tests with pass/fail status
+- **XML results**: `app/build/test-results/test/` - Machine-readable format
 
-### Running Black-Box Tests (Instrumented Tests)
+### Running Black-Box Tests (Instrumented/UI Tests)
 
-Black-box tests require an Android device or emulator.
+**Why black-box tests need an emulator:**
+- Black-box tests use **Espresso** to interact with real Android UI components (buttons, text fields, RecyclerViews)
+- Espresso requires the **Android framework** to be running
+- The Android framework only exists on Android devices/emulators
+- JUnit alone cannot test Android UI - you need Android's runtime environment
+- This is a fundamental requirement of Android UI testing, not a limitation
+
+**Think of it like this:** Testing a web app requires a browser. Testing Android UI requires an Android device/emulator.
 
 **Run all black-box tests:**
 ```bash
 ./gradlew connectedAndroidTest
 ```
+*(Requires emulator or device to be running)*
 
 **Run a specific test class:**
 ```bash
@@ -46,14 +91,14 @@ Black-box tests require an Android device or emulator.
 ```
 
 **Run tests in Android Studio:**
-1. Ensure an emulator is running or device is connected
-2. Right-click on `app/src/androidTest/java/` folder
-3. Select "Run Tests"
-4. Or right-click on a specific test class/method and select "Run"
+1. Start an emulator: Tools → Device Manager → Create/Start Virtual Device
+2. Right-click on `app/src/androidTest/java/` folder → "Run Tests"
+3. Or right-click on a specific test class/method → "Run"
+4. Results appear in the "Run" tool window
 
 **View test results:**
-- HTML report: `app/build/reports/androidTests/connected/index.html`
-- XML results: `app/build/outputs/androidTest-results/connected/`
+- **HTML report**: `app/build/reports/androidTests/connected/index.html`
+- **XML results**: `app/build/outputs/androidTest-results/connected/`
 
 ### Running Both Test Suites
 ```bash
@@ -68,6 +113,24 @@ Black-box tests require an Android device or emulator.
 Black-box tests verify the application's functionality from a user's perspective without knowledge of internal implementation. These tests use Espresso for UI interactions and make actual API calls to verify end-to-end behavior.
 
 **Total Black-Box Test Cases: 28** (exceeds minimum requirement of 20 for team of 4)
+
+### Why Black-Box Tests Require an Emulator
+
+**Question:** Why can't JUnit/Espresso work without an emulator?
+
+**Answer:** 
+- **Espresso** is an Android UI testing framework that interacts with real Android Views (TextView, Button, RecyclerView, etc.)
+- These Views are part of the **Android framework**, not standard Java
+- The Android framework only runs on Android devices/emulators - it doesn't exist in regular JVM
+- JUnit alone can test Java code, but cannot test Android UI components
+- It's similar to how you need a browser to test web apps - you need an Android runtime to test Android UI
+
+**What happens without an emulator:**
+- White-box tests (JUnit only) work fine - they test Java classes
+- Black-box tests (Espresso) fail - they need Android framework to create and interact with UI
+
+**Alternative (not recommended for black-box):**
+- You could use Robolectric to mock the Android framework, but that's not true black-box testing since it doesn't test the real UI
 
 ---
 

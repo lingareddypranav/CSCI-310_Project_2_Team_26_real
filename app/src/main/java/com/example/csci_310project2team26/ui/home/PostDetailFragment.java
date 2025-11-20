@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 public class PostDetailFragment extends Fragment {
 
@@ -374,7 +373,9 @@ public class PostDetailFragment extends Fragment {
                 format.setTimeZone(TimeZone.getTimeZone("UTC"));
                 Date date = format.parse(dateString);
                 if (date != null) {
-                    return formatRelativeTime(date, resources);
+                    // Format as actual date: "MMM d, yyyy 'at' h:mm a"
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy 'at' h:mm a", Locale.getDefault());
+                    return displayFormat.format(date);
                 }
             } catch (ParseException e) {
                 // Try next format
@@ -384,31 +385,6 @@ public class PostDetailFragment extends Fragment {
 
         // If all parsing fails, return formatted original string
         return dateString.length() > 10 ? dateString.substring(0, 10) : dateString;
-    }
-
-    private String formatRelativeTime(Date date, Resources resources) {
-        long now = System.currentTimeMillis();
-        long diff = now - date.getTime();
-        long days = TimeUnit.MILLISECONDS.toDays(diff);
-        long hours = TimeUnit.MILLISECONDS.toHours(diff);
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
-
-        if (days > 0) {
-            if (days == 1) {
-                return resources.getString(R.string.post_date_yesterday);
-            } else if (days < 7) {
-                return resources.getString(R.string.post_date_days_ago, (int)days);
-            } else {
-                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-                return displayFormat.format(date);
-            }
-        } else if (hours > 0) {
-            return resources.getString(R.string.post_date_hours_ago, (int)hours);
-        } else if (minutes > 0) {
-            return resources.getString(R.string.post_date_minutes_ago, (int)minutes);
-        } else {
-            return resources.getString(R.string.post_date_just_now);
-        }
     }
 
     private void deletePost() {
