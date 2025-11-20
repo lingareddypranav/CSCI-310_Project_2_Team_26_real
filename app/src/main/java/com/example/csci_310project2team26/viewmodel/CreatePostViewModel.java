@@ -26,30 +26,41 @@ public class CreatePostViewModel extends ViewModel {
         return createdPost;
     }
 
-    public void createPost(String title, String content, String tag, boolean isPrompt, 
+    public void createPost(String title, String content, String tag, boolean isPrompt,
                            String promptSection, String descriptionSection) {
-        if (title == null || title.trim().isEmpty()) {
+        String trimmedTitle = title != null ? title.trim() : "";
+        String trimmedTag = tag != null ? tag.trim() : "";
+        String trimmedContent = content != null ? content.trim() : "";
+        String trimmedPrompt = promptSection != null ? promptSection.trim() : "";
+        String trimmedDescription = descriptionSection != null ? descriptionSection.trim() : "";
+
+        if (trimmedTitle.isEmpty()) {
             error.postValue("Title is required");
             return;
         }
-        
-        if (tag == null || tag.trim().isEmpty()) {
+
+        if (trimmedTag.isEmpty()) {
             error.postValue("Tag is required");
             return;
         }
 
+        // Normalize prompt intent so stale toggle state or empty prompt fields don't misclassify
+        // the submission as a prompt post.
+        boolean hasPromptContent = !trimmedPrompt.isEmpty() || !trimmedDescription.isEmpty();
+        boolean normalizedIsPrompt = isPrompt && hasPromptContent;
+
         // For prompt posts, require prompt text and description. For regular posts, require content.
-        if (isPrompt) {
-            if (promptSection == null || promptSection.trim().isEmpty()) {
+        if (normalizedIsPrompt) {
+            if (trimmedPrompt.isEmpty()) {
                 error.postValue("Prompt text is required for prompt posts");
                 return;
             }
-            if (descriptionSection == null || descriptionSection.trim().isEmpty()) {
+            if (trimmedDescription.isEmpty()) {
                 error.postValue("Description is required for prompt posts");
                 return;
             }
         } else {
-            if (content == null || content.trim().isEmpty()) {
+            if (trimmedContent.isEmpty()) {
                 error.postValue("Content is required");
                 return;
             }
@@ -60,12 +71,12 @@ public class CreatePostViewModel extends ViewModel {
         createdPost.postValue(null);
 
         postRepository.createPost(
-                title.trim(), 
-                content != null ? content.trim() : "", 
-                tag != null ? tag.trim() : "", 
-                isPrompt,
-                promptSection != null ? promptSection.trim() : null,
-                descriptionSection != null ? descriptionSection.trim() : null,
+                trimmedTitle,
+                trimmedContent,
+                trimmedTag,
+                normalizedIsPrompt,
+                normalizedIsPrompt ? trimmedPrompt : null,
+                normalizedIsPrompt ? trimmedDescription : null,
                 new PostRepository.Callback<Post>() {
                     @Override
                     public void onSuccess(Post result) {
