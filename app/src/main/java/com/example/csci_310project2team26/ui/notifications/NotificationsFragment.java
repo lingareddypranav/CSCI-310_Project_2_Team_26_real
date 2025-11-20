@@ -39,7 +39,17 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        adapter = new UserActivityAdapter(this::onActivityClicked);
+        adapter = new UserActivityAdapter(new UserActivityAdapter.OnActivityClickListener() {
+            @Override
+            public void onActivityClicked(UserActivityItem item) {
+                NotificationsFragment.this.onActivityClicked(item);
+            }
+
+            @Override
+            public void onActivityDeleteClicked(UserActivityItem item) {
+                NotificationsFragment.this.onActivityDelete(item);
+            }
+        });
         binding.activityRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.activityRecyclerView.setAdapter(adapter);
     }
@@ -63,6 +73,13 @@ public class NotificationsFragment extends Fragment {
         viewModel.getError().observe(getViewLifecycleOwner(), error -> {
             if (error != null && !error.isEmpty()) {
                 Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message != null && !message.isEmpty()) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                viewModel.clearSuccessMessage();
             }
         });
     }
@@ -93,6 +110,30 @@ public class NotificationsFragment extends Fragment {
                 args.putString("postId", commentPostId);
                 args.putString("commentId", commentId);
                 Navigation.findNavController(binding.getRoot()).navigate(R.id.editCommentFragment, args);
+                break;
+        }
+    }
+
+    private void onActivityDelete(UserActivityItem item) {
+        if (item == null) {
+            Toast.makeText(requireContext(), "Unable to delete item", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        switch (item.getType()) {
+            case POST:
+                if (item.getId() != null && !item.getId().isEmpty()) {
+                    viewModel.deletePost(item.getId());
+                } else {
+                    Toast.makeText(requireContext(), "Post ID is missing", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case COMMENT:
+                if (item.getId() != null && !item.getId().isEmpty()) {
+                    viewModel.deleteComment(item.getId());
+                } else {
+                    Toast.makeText(requireContext(), "Comment ID is missing", Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }

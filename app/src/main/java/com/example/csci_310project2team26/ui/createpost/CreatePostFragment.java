@@ -30,15 +30,17 @@ public class CreatePostFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
 
         binding.publishButton.setOnClickListener(v -> onPublishClicked());
-        
+
         // Show/hide prompt fields based on toggle
         binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (binding.promptSectionLayout != null) {
                 binding.promptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             }
-            // For prompt posts, body is optional
-            if (binding.bodyEditText != null) {
-                binding.bodyEditText.setHint(isChecked ? "Content (optional for prompt posts)" : getString(R.string.create_post_body_hint));
+
+            // Hide the normal body field for prompt posts and show it for regular posts
+            if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
+                View bodyContainer = (View) binding.bodyEditText.getParent();
+                bodyContainer.setVisibility(isChecked ? View.GONE : View.VISIBLE);
             }
         });
         

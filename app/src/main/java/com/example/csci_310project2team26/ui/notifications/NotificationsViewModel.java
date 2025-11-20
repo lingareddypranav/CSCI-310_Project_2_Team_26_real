@@ -25,6 +25,7 @@ public class NotificationsViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>(null);
     private final MutableLiveData<List<UserActivityItem>> activityItems = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<String> successMessage = new MutableLiveData<>(null);
 
     public LiveData<Boolean> getLoading() {
         return loading;
@@ -38,6 +39,14 @@ public class NotificationsViewModel extends ViewModel {
         return activityItems;
     }
 
+    public LiveData<String> getSuccessMessage() {
+        return successMessage;
+    }
+
+    public void clearSuccessMessage() {
+        successMessage.postValue(null);
+    }
+
     public void loadUserActivity(String userId) {
         if (TextUtils.isEmpty(userId)) {
             activityItems.postValue(new ArrayList<>());
@@ -46,6 +55,7 @@ public class NotificationsViewModel extends ViewModel {
 
         loading.postValue(true);
         error.postValue(null);
+        successMessage.postValue(null);
         activityItems.postValue(new ArrayList<>());
 
         postRepository.fetchPostsForUser(userId, new PostRepository.Callback<List<Post>>() {
@@ -72,6 +82,69 @@ public class NotificationsViewModel extends ViewModel {
                 error.postValue(err);
             }
         });
+    }
+
+    public void deletePost(String postId) {
+        if (TextUtils.isEmpty(postId)) {
+            error.postValue("Post ID missing");
+            return;
+        }
+
+        loading.postValue(true);
+        postRepository.deletePost(postId, new PostRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                removeActivityItem(UserActivityItem.Type.POST, postId);
+                successMessage.postValue("Post deleted");
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err != null ? err : "Failed to delete post");
+            }
+        });
+    }
+
+    public void deleteComment(String commentId) {
+        if (TextUtils.isEmpty(commentId)) {
+            error.postValue("Comment ID missing");
+            return;
+        }
+
+        loading.postValue(true);
+        commentRepository.deleteComment(commentId, new CommentRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                removeActivityItem(UserActivityItem.Type.COMMENT, commentId);
+                successMessage.postValue("Comment deleted");
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err != null ? err : "Failed to delete comment");
+            }
+        });
+    }
+
+    private void removeActivityItem(UserActivityItem.Type type, String id) {
+        List<UserActivityItem> current = activityItems.getValue();
+        if (current == null || current.isEmpty()) {
+            return;
+        }
+
+        List<UserActivityItem> updated = new ArrayList<>();
+        for (UserActivityItem item : current) {
+            if (item == null) continue;
+            if (item.getType() == type && id.equals(item.getId())) {
+                continue;
+            }
+            updated.add(item);
+        }
+        activityItems.postValue(updated);
     }
 
     private List<UserActivityItem> buildItems(List<Post> posts, List<Comment> comments) {
