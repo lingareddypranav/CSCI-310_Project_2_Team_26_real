@@ -107,9 +107,11 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             Resources resources = itemView.getResources();
             titleTextView.setText(post.getTitle() != null ? post.getTitle() : "");
 
-            String author = post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
-                    ? post.getAuthor_name()
-                    : resources.getString(R.string.post_meta_unknown_author);
+            String author = post.isAnonymous()
+                    ? resources.getString(R.string.post_author_anonymous)
+                    : (post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
+                        ? post.getAuthor_name()
+                        : resources.getString(R.string.post_meta_unknown_author));
             boolean hasTag = post.getLlm_tag() != null && !post.getLlm_tag().isEmpty();
             String tagLabel = hasTag
                     ? resources.getString(R.string.post_tag_format, post.getLlm_tag())
@@ -123,9 +125,9 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                 dateTextView.setText(dateText);
             }
 
-            // For prompt posts, show prompt section preview; for regular posts, show content
-            if (post.isIs_prompt_post() && post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
-                contentTextView.setText(post.getPrompt_section());
+            // For prompt posts, show prompt + description preview; for regular posts, show content
+            if (post.isIs_prompt_post()) {
+                contentTextView.setText(buildPromptPreview(post));
             } else {
                 contentTextView.setText(post.getContent() != null ? post.getContent() : "");
             }
@@ -216,6 +218,23 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
             // If all parsing fails, return formatted original string
             return dateString.length() > 10 ? dateString.substring(0, 10) : dateString;
+        }
+
+        private String buildPromptPreview(Post post) {
+            StringBuilder builder = new StringBuilder();
+            if (post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
+                builder.append(post.getPrompt_section().trim());
+            }
+            if (post.getDescription_section() != null && !post.getDescription_section().trim().isEmpty()) {
+                if (builder.length() > 0) {
+                    builder.append("\n\n");
+                }
+                builder.append(post.getDescription_section().trim());
+            }
+            if (builder.length() == 0 && post.getContent() != null) {
+                builder.append(post.getContent());
+            }
+            return builder.toString();
         }
 
         private String formatRelativeTime(Date date, Resources resources) {

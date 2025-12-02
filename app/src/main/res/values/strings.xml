@@ -119,6 +119,7 @@
     <string name="title_create_post">Create Post</string>
     <string name="create_post_title_hint">Post title</string>
     <string name="create_post_body_hint">Share your thoughts</string>
+    <string name="create_post_body_hint_optional_prompt">Content (optional for prompt posts)</string>
     <string name="create_post_tag_hint">Tag (e.g. GPT-4)</string>
     <string name="create_post_is_prompt">Is this a prompt post?</string>
     <string name="create_post_submit">Publish</string>
@@ -183,6 +184,7 @@
     <string name="post_tag_format">#%1$s</string>
     <string name="post_tag_unknown">#untagged</string>
     <string name="post_author_format">By %1$s</string>
+    <string name="post_author_anonymous">Anonymous</string>
 
     <plurals name="post_comments">
         <item quantity="one">%1$s comment</item>

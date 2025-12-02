@@ -35,16 +35,10 @@ public class EditPostFragment extends Fragment {
         }
 
         binding.savePostButton.setOnClickListener(v -> onSaveClicked());
-        
+
         // Show/hide prompt fields based on toggle
         binding.editPromptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (binding.editPromptSectionLayout != null) {
-                binding.editPromptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            }
-            // For prompt posts, body is optional
-            if (binding.editBodyEditText != null) {
-                binding.editBodyEditText.setHint(isChecked ? "Content (optional for prompt posts)" : getString(R.string.create_post_body_hint));
-            }
+            togglePromptFields(isChecked);
         });
         
         observeViewModel();
@@ -97,12 +91,9 @@ public class EditPostFragment extends Fragment {
         binding.editTagEditText.setText(post.getLlm_tag() != null ? post.getLlm_tag() : "");
         boolean isPrompt = post.isIs_prompt_post();
         binding.editPromptSwitch.setChecked(isPrompt);
-        
-        // Show/hide prompt fields based on post type
-        if (binding.editPromptSectionLayout != null) {
-            binding.editPromptSectionLayout.setVisibility(isPrompt ? View.VISIBLE : View.GONE);
-        }
-        
+        binding.editPromptSwitch.setEnabled(!isPrompt);
+        togglePromptFields(isPrompt);
+
         // Populate prompt sections if they exist
         if (isPrompt) {
             if (binding.editPromptSectionEditText != null) {
@@ -155,6 +146,18 @@ public class EditPostFragment extends Fragment {
         }
         
         viewModel.updatePost(postId, title, body, tag, isPrompt, promptSection, descriptionSection);
+    }
+
+    private void togglePromptFields(boolean isPrompt) {
+        if (binding.editPromptSectionLayout != null) {
+            binding.editPromptSectionLayout.setVisibility(isPrompt ? View.VISIBLE : View.GONE);
+        }
+        if (binding.editBodyLayout != null) {
+            binding.editBodyLayout.setVisibility(isPrompt ? View.GONE : View.VISIBLE);
+        }
+        if (binding.editBodyEditText != null) {
+            binding.editBodyEditText.setHint(isPrompt ? getString(R.string.create_post_body_hint_optional_prompt) : getString(R.string.create_post_body_hint));
+        }
     }
 
     @Override
