@@ -234,9 +234,11 @@ public class PostDetailFragment extends Fragment {
         }
 
         Resources resources = getResources();
-        String author = post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
-                ? post.getAuthor_name()
-                : resources.getString(R.string.post_meta_unknown_author);
+        String author = post.isAnonymous()
+                ? resources.getString(R.string.post_author_anonymous)
+                : (post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
+                    ? post.getAuthor_name()
+                    : resources.getString(R.string.post_meta_unknown_author));
         boolean hasTag = post.getLlm_tag() != null && !post.getLlm_tag().isEmpty();
         String tagLabel = hasTag
                 ? resources.getString(R.string.post_tag_format, post.getLlm_tag())
