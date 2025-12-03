@@ -58,38 +58,44 @@ const getPostVersions = async (req, res) => {
         ? Math.max(...savedVersions.rows.map(v => v.version_number))
         : 0;
       
-      // Always add current state as the latest version
-      allVersions.push({
-        id: current.id,
-        post_id: current.post_id,
-        version_number: maxVersion + 1,
-        title: current.title,
-        content: current.content,
-        prompt_section: current.prompt_section,
-        description_section: current.description_section,
-        llm_tag: current.llm_tag,
-        is_prompt_post: current.is_prompt_post,
-        anonymous: current.anonymous,
-        created_at: current.created_at,
-        created_by: current.created_by,
-        is_current: true
-      });
+      // Check if current state matches Version 1 (initial state - no edits made yet)
+      const version1 = savedVersions.rows.find(v => v.version_number === 1);
+      let currentMatchesV1 = false;
+      if (version1) {
+        currentMatchesV1 = 
+          normalize(current.title) === normalize(version1.title) &&
+          normalize(current.content) === normalize(version1.content) &&
+          normalize(current.prompt_section) === normalize(version1.prompt_section) &&
+          normalize(current.description_section) === normalize(version1.description_section) &&
+          normalize(current.llm_tag) === normalize(version1.llm_tag) &&
+          current.is_prompt_post === version1.is_prompt_post &&
+          current.anonymous === version1.anonymous;
+      }
       
-      // Add saved versions, but skip any that match the current state (to avoid duplicates)
-      for (const saved of savedVersions.rows) {
-        const savedMatchesCurrent = 
-          normalize(saved.title) === normalize(current.title) &&
-          normalize(saved.content) === normalize(current.content) &&
-          normalize(saved.prompt_section) === normalize(current.prompt_section) &&
-          normalize(saved.description_section) === normalize(current.description_section) &&
-          normalize(saved.llm_tag) === normalize(current.llm_tag) &&
-          saved.is_prompt_post === current.is_prompt_post &&
-          saved.anonymous === current.anonymous;
+      if (currentMatchesV1 && version1) {
+        // Current matches Version 1 - just show Version 1 (no edits made yet)
+        allVersions.push({ ...version1, is_current: true });
+      } else {
+        // Current is different from Version 1 - show it as the latest version
+        // Version number is maxVersion + 1 (next version after all saved versions)
+        allVersions.push({
+          id: current.id,
+          post_id: current.post_id,
+          version_number: maxVersion + 1,
+          title: current.title,
+          content: current.content,
+          prompt_section: current.prompt_section,
+          description_section: current.description_section,
+          llm_tag: current.llm_tag,
+          is_prompt_post: current.is_prompt_post,
+          anonymous: current.anonymous,
+          created_at: current.created_at,
+          created_by: current.created_by,
+          is_current: true
+        });
         
-        // Only add saved version if it's different from current (prevents duplicates)
-        if (!savedMatchesCurrent) {
-          allVersions.push({ ...saved, is_current: false });
-        }
+        // Add all saved versions in descending order (latest saved first)
+        allVersions.push(...savedVersions.rows.map(v => ({ ...v, is_current: false })));
       }
     }
 
