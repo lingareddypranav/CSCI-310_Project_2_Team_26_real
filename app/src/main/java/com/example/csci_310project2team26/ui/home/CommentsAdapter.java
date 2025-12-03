@@ -31,7 +31,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     private OnCommentEditListener editListener;
     private OnCommentDeleteListener deleteListener;
     private String currentUserId;
-    private static boolean parentIsPrompt;
+    private boolean parentIsPrompt;
 
     public CommentsAdapter() {
         this.currentUserId = SessionManager.getUserId();
