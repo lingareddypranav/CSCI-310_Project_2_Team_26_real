@@ -98,6 +98,12 @@ public class SearchFragment extends Fragment {
                     .setNegativeButton(R.string.cancel, null)
                     .show();
         });
+        postsAdapter.setOnBookmarkToggleListener((post, isBookmarked) -> {
+            if (getContext() != null) {
+                int messageId = isBookmarked ? R.string.bookmark_added : R.string.bookmark_removed;
+                Toast.makeText(getContext(), messageId, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         binding.postsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.postsRecyclerView.setAdapter(postsAdapter);

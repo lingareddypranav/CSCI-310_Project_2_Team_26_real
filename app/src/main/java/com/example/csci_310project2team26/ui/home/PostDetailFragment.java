@@ -21,6 +21,7 @@ import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.repository.PostRepository;
 import com.example.csci_310project2team26.data.repository.SessionManager;
+import com.example.csci_310project2team26.data.repository.VotePreferenceManager;
 import com.example.csci_310project2team26.databinding.FragmentPostDetailBinding;
 import com.example.csci_310project2team26.viewmodel.CommentsViewModel;
 import com.example.csci_310project2team26.viewmodel.PostDetailViewModel;
@@ -42,6 +43,8 @@ public class PostDetailFragment extends Fragment {
     private CommentsAdapter commentsAdapter;
     private String postId;
     private int displayedCommentCount = 0;
+    private Post currentPost;
+    private long sessionVersionAtLoad = SessionManager.getSessionVersion();
 
     @Nullable
     @Override
@@ -103,6 +106,7 @@ public class PostDetailFragment extends Fragment {
             return;
         }
 
+        sessionVersionAtLoad = SessionManager.getSessionVersion();
         postDetailViewModel.loadPost(postId);
         commentsViewModel.loadComments(postId);
 
@@ -112,6 +116,17 @@ public class PostDetailFragment extends Fragment {
         binding.addCommentButton.setOnClickListener(v -> addComment());
 
         observeViewModel();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        long latestSession = SessionManager.getSessionVersion();
+        if (postId != null && latestSession != sessionVersionAtLoad) {
+            sessionVersionAtLoad = latestSession;
+            postDetailViewModel.loadPost(postId);
+            commentsViewModel.loadComments(postId);
+        }
     }
 
     private void observeViewModel() {
@@ -171,11 +186,14 @@ public class PostDetailFragment extends Fragment {
     
     private void updatePostUI(Post post) {
         if (binding == null || getContext() == null || post == null) return;
+
+        currentPost = post;
         
         binding.titleTextView.setText(post.getTitle() != null ? post.getTitle() : "");
         
         // Display content or prompt sections based on post type
         boolean isPromptPost = post.isIs_prompt_post();
+        commentsAdapter.setParentIsPrompt(isPromptPost);
         if (isPromptPost) {
             // For prompt posts, show prompt_section and description_section
             binding.contentTextView.setVisibility(View.GONE);
@@ -213,11 +231,12 @@ public class PostDetailFragment extends Fragment {
                     binding.descriptionSectionTextView.setVisibility(View.GONE);
                 }
             }
+
         } else {
             // For regular posts, show content
             binding.contentTextView.setVisibility(View.VISIBLE);
             binding.contentTextView.setText(post.getContent() != null ? post.getContent() : "");
-            
+
             // Hide prompt sections
             if (binding.promptSectionLabel != null) {
                 binding.promptSectionLabel.setVisibility(View.GONE);
@@ -231,12 +250,17 @@ public class PostDetailFragment extends Fragment {
             if (binding.descriptionSectionTextView != null) {
                 binding.descriptionSectionTextView.setVisibility(View.GONE);
             }
+            if (binding.promptDivider != null) {
+                binding.promptDivider.setVisibility(View.GONE);
+            }
         }
 
         Resources resources = getResources();
-        String author = post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
-                ? post.getAuthor_name()
-                : resources.getString(R.string.post_meta_unknown_author);
+        String author = post.isAnonymous()
+                ? resources.getString(R.string.post_author_anonymous)
+                : (post.getAuthor_name() != null && !post.getAuthor_name().isEmpty()
+                    ? post.getAuthor_name()
+                    : resources.getString(R.string.post_meta_unknown_author));
         boolean hasTag = post.getLlm_tag() != null && !post.getLlm_tag().isEmpty();
         String tagLabel = hasTag
                 ? resources.getString(R.string.post_tag_format, post.getLlm_tag())
@@ -264,6 +288,11 @@ public class PostDetailFragment extends Fragment {
             }
         }
 
+        String persistedVote = VotePreferenceManager.getPostVote(getContext(), post.getId());
+        if (persistedVote != null && (post.getUser_vote_type() == null || post.getUser_vote_type().isEmpty())) {
+            post.setUser_vote_type(persistedVote);
+        }
+
         NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
         int upvotes = Math.max(post.getUpvotes(), 0);
         int downvotes = Math.max(post.getDownvotes(), 0);
@@ -284,6 +313,8 @@ public class PostDetailFragment extends Fragment {
         binding.upvoteCountTextView.setText(upvoteText);
         binding.downvoteCountTextView.setText(downvoteText);
         updateCommentCountText(displayedCommentCount);
+
+        updateVoteButtons(post.getUser_vote_type());
     }
 
     private void vote(String type) {
@@ -299,10 +330,46 @@ public class PostDetailFragment extends Fragment {
         if (Boolean.TRUE.equals(isVoting)) {
             return; // Already processing a vote
         }
-        
+
+        applyLocalVote(type);
+
         // Use ViewModel to vote (same pattern as comment voting)
         // This will automatically reload the post and update UI via LiveData
         postDetailViewModel.voteOnPost(postId, type);
+    }
+
+    private void applyLocalVote(String type) {
+        if (currentPost == null || binding == null) return;
+
+        String currentVote = currentPost.getUser_vote_type();
+        String newVote = type;
+
+        if ("up".equalsIgnoreCase(type) && "up".equalsIgnoreCase(currentVote)) {
+            newVote = null;
+        } else if ("down".equalsIgnoreCase(type) && "down".equalsIgnoreCase(currentVote)) {
+            newVote = null;
+        }
+
+        currentPost.setUser_vote_type(newVote);
+        VotePreferenceManager.setPostVote(getContext(), currentPost.getId(), newVote);
+        updateVoteButtons(newVote);
+    }
+
+    private void updateVoteButtons(String userVoteType) {
+        if (binding == null) return;
+        boolean isUpvoted = "up".equalsIgnoreCase(userVoteType);
+        boolean isDownvoted = "down".equalsIgnoreCase(userVoteType);
+
+        if (binding.upvoteButton != null) {
+            binding.upvoteButton.setImageResource(isUpvoted
+                    ? R.drawable.ic_arrow_up_filled_24dp
+                    : R.drawable.ic_arrow_up_outline_24dp);
+        }
+        if (binding.downvoteButton != null) {
+            binding.downvoteButton.setImageResource(isDownvoted
+                    ? R.drawable.ic_arrow_down_filled_24dp
+                    : R.drawable.ic_arrow_down_outline_24dp);
+        }
     }
 
     private void addComment() {

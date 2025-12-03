@@ -14,13 +14,19 @@ import com.example.csci_310project2team26.data.repository.PostRepository;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NotificationsViewModel extends ViewModel {
 
     private final PostRepository postRepository = new PostRepository();
     private final CommentRepository commentRepository = new CommentRepository();
+
+    private final Map<String, String> postTitleCache = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> postPromptCache = new ConcurrentHashMap<>();
 
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>(null);
@@ -66,6 +72,7 @@ public class NotificationsViewModel extends ViewModel {
                     public void onSuccess(List<Comment> comments) {
                         loading.postValue(false);
                         activityItems.postValue(buildItems(posts, comments));
+                        fetchMissingPostTitles(comments);
                     }
 
                     @Override
@@ -153,19 +160,24 @@ public class NotificationsViewModel extends ViewModel {
 
         if (posts != null) {
             for (Post post : posts) {
-                long updated = parseTimestamp(post.getUpdated_at());
+                long created = parseTimestamp(post.getCreated_at());
                 String tag = !TextUtils.isEmpty(post.getLlm_tag())
                         ? String.format(Locale.getDefault(), "#%s", post.getLlm_tag())
                         : "";
                 String detail = !TextUtils.isEmpty(tag) ? tag.toUpperCase(Locale.getDefault()) : "";
                 String title = !TextUtils.isEmpty(post.getTitle()) ? post.getTitle() : "(untitled post)";
+                if (!TextUtils.isEmpty(post.getId())) {
+                    postTitleCache.put(post.getId(), title);
+                    postPromptCache.put(post.getId(), post.isIs_prompt_post());
+                }
                 items.add(new UserActivityItem(
                         UserActivityItem.Type.POST,
                         post.getId(),
                         post.getId(),
                         title,
                         detail,
-                        updated > 0 ? updated : now
+                        created > 0 ? created : now,
+                        post.isIs_prompt_post()
                 ));
             }
         }
@@ -179,8 +191,12 @@ public class NotificationsViewModel extends ViewModel {
                         : (!TextUtils.isEmpty(comment.getText())
                                 ? truncate(comment.getText(), 80)
                                 : "(comment)");
+                String postTitle = lookupPostTitle(comment.getPost_id());
+                boolean isPromptPost = isPromptPost(comment.getPost_id());
                 String detail = !TextUtils.isEmpty(comment.getPost_id())
-                        ? String.format(Locale.getDefault(), "Post: %s", comment.getPost_id())
+                        ? String.format(Locale.getDefault(), "%s: %s",
+                        isPromptPost ? "Prompt" : "Post",
+                        postTitle)
                         : "";
                 items.add(new UserActivityItem(
                         UserActivityItem.Type.COMMENT,
@@ -188,7 +204,8 @@ public class NotificationsViewModel extends ViewModel {
                         comment.getPost_id(),
                         title,
                         detail,
-                        updated > 0 ? updated : now
+                        updated > 0 ? updated : now,
+                        isPromptPost
                 ));
             }
         }
@@ -218,6 +235,82 @@ public class NotificationsViewModel extends ViewModel {
             }
         }
         return 0L;
+    }
+
+    private String lookupPostTitle(String postId) {
+        if (TextUtils.isEmpty(postId)) {
+            return "";
+        }
+        String cached = postTitleCache.get(postId);
+        if (!TextUtils.isEmpty(cached)) {
+            return cached;
+        }
+        return postId;
+    }
+
+    private boolean isPromptPost(String postId) {
+        if (TextUtils.isEmpty(postId)) {
+            return false;
+        }
+        Boolean cached = postPromptCache.get(postId);
+        return cached != null && cached;
+    }
+
+    private void fetchMissingPostTitles(List<Comment> comments) {
+        if (comments == null || comments.isEmpty()) {
+            return;
+        }
+
+        Map<String, Boolean> requested = new HashMap<>();
+        for (Comment comment : comments) {
+            if (comment == null || TextUtils.isEmpty(comment.getPost_id())) continue;
+            if (postTitleCache.containsKey(comment.getPost_id())) continue;
+            if (requested.containsKey(comment.getPost_id())) continue;
+            requested.put(comment.getPost_id(), true);
+
+            postRepository.getPostById(comment.getPost_id(), new PostRepository.Callback<Post>() {
+                @Override
+                public void onSuccess(Post result) {
+                    if (result == null || TextUtils.isEmpty(result.getId())) {
+                        return;
+                    }
+                    String title = !TextUtils.isEmpty(result.getTitle()) ? result.getTitle() : result.getId();
+                    postTitleCache.put(result.getId(), title);
+                    postPromptCache.put(result.getId(), result.isIs_prompt_post());
+                    updateCommentTitles(result.getId(), title, result.isIs_prompt_post());
+                }
+
+                @Override
+                public void onError(String error) {
+                    // Swallow errors to avoid interrupting UI; fallback remains post ID
+                }
+            });
+        }
+    }
+
+    private void updateCommentTitles(String postId, String title, boolean isPromptPost) {
+        List<UserActivityItem> current = activityItems.getValue();
+        if (current == null || current.isEmpty()) {
+            return;
+        }
+        List<UserActivityItem> updated = new ArrayList<>();
+        for (UserActivityItem item : current) {
+            if (item == null) continue;
+            if (item.getType() == UserActivityItem.Type.COMMENT && postId.equals(item.getPostId())) {
+                updated.add(new UserActivityItem(
+                        item.getType(),
+                        item.getId(),
+                        item.getPostId(),
+                        item.getTitle(),
+                        String.format(Locale.getDefault(), "%s: %s", isPromptPost ? "Prompt" : "Post", title),
+                        item.getTimestamp(),
+                        isPromptPost
+                ));
+            } else {
+                updated.add(item);
+            }
+        }
+        activityItems.postValue(updated);
     }
 
     private String truncate(String value, int maxLength) {

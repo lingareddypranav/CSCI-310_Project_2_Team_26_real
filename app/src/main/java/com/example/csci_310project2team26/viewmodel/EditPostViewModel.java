@@ -52,19 +52,19 @@ public class EditPostViewModel extends ViewModel {
         });
     }
 
-    public void updatePost(String postId, String title, String content, String tag, boolean isPrompt) {
-        updatePost(postId, title, content, tag, isPrompt, null, null);
+    public void updatePost(String postId, String title, String content, String tag, boolean isPrompt, boolean anonymous) {
+        updatePost(postId, title, content, tag, isPrompt, null, null, anonymous);
     }
 
-    public void updatePost(String postId, String title, String content, String tag, boolean isPrompt, 
-                           String promptSection, String descriptionSection) {
+    public void updatePost(String postId, String title, String content, String tag, boolean isPrompt,
+                           String promptSection, String descriptionSection, boolean anonymous) {
         if (postId == null) {
             return;
         }
         loading.postValue(true);
         error.postValue(null);
         updatedPost.postValue(null);
-        postRepository.updatePost(postId, title, content, tag, isPrompt, promptSection, descriptionSection, new PostRepository.Callback<Post>() {
+        postRepository.updatePost(postId, title, content, tag, isPrompt, promptSection, descriptionSection, anonymous, new PostRepository.Callback<Post>() {
             @Override
             public void onSuccess(Post result) {
                 loading.postValue(false);

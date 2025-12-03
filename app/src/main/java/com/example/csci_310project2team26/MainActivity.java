@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private NavController navController;
+    private boolean showSearchActions = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home,
                 R.id.navigation_dashboard,
+                R.id.navigation_bookmarks,
                 R.id.navigation_create_post,
                 R.id.navigation_notifications)
                 .build();
@@ -45,6 +47,12 @@ public class MainActivity extends AppCompatActivity {
 //        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int destId = destination != null ? destination.getId() : -1;
+            showSearchActions = destId == R.id.navigation_home || destId == R.id.navigation_dashboard;
+            invalidateOptionsMenu();
+        });
     }
 
     @Override
@@ -59,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem search = menu.findItem(R.id.action_search);
+        MenuItem trending = menu.findItem(R.id.action_trending);
+        if (search != null) search.setVisible(showSearchActions);
+        if (trending != null) trending.setVisible(showSearchActions);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override

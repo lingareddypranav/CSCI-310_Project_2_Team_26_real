@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">CSCI-310 Project 2 Team 26</string>
-    <string name="title_home">Home</string>
+    <string name="title_home">Posts</string>
     <string name="title_dashboard">Prompts</string>
     <string name="title_notifications">Activity</string>
+    <string name="title_bookmarks">Bookmarks</string>
 
     <!-- NEW STRINGS FOR AUTHENTICATION AND PROFILE - ADD THESE BELOW -->
 
@@ -119,11 +120,17 @@
     <string name="title_create_post">Create Post</string>
     <string name="create_post_title_hint">Post title</string>
     <string name="create_post_body_hint">Share your thoughts</string>
+    <string name="create_post_body_hint_optional_prompt">Content (optional for prompt posts)</string>
     <string name="create_post_tag_hint">Tag (e.g. GPT-4)</string>
     <string name="create_post_is_prompt">Is this a prompt post?</string>
+    <string name="create_post_is_anonymous">Post anonymously</string>
     <string name="create_post_submit">Publish</string>
+    <string name="create_post_save_draft">Save draft</string>
+    <string name="create_post_view_drafts">Saved drafts</string>
     <string name="create_post_success">Post created!</string>
     <string name="create_post_error">Unable to create post</string>
+    <string name="create_post_draft_saved">Draft saved locally</string>
+    <string name="create_post_draft_error">Add a title before saving your draft</string>
     <string name="title_edit_post">Edit Post</string>
     <string name="edit_post_save">Save changes</string>
     <string name="edit_post_success">Post updated!</string>
@@ -137,6 +144,22 @@
     <string name="user_activity_post_label">Post</string>
     <string name="user_activity_comment_label">Comment</string>
     <string name="title_create_post_nav">Create</string>
+    <string name="bookmarks_empty_state">You haven’t bookmarked any posts yet.</string>
+    <string name="bookmarks_filter_label">Show</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="bookmark_added">Saved to bookmarks</string>
+    <string name="bookmark_removed">Removed from bookmarks</string>
+
+    <!-- Drafts -->
+    <string name="saved_drafts_title">Saved drafts</string>
+    <string name="saved_drafts_empty">You haven’t saved any drafts yet.</string>
+    <string name="draft_meta_prompt">Prompt</string>
+    <string name="draft_meta_post">Post</string>
+    <string name="draft_use_button">Use draft</string>
+    <string name="draft_delete_button">Delete</string>
+    <string name="draft_prompt_label">Prompt:</string>
+    <string name="draft_description_label">Description:</string>
     
     <!-- Search -->
     <string name="search_title">Search Posts</string>
@@ -183,6 +206,7 @@
     <string name="post_tag_format">#%1$s</string>
     <string name="post_tag_unknown">#untagged</string>
     <string name="post_author_format">By %1$s</string>
+    <string name="post_author_anonymous">Anonymous</string>
 
     <plurals name="post_comments">
         <item quantity="one">%1$s comment</item>
@@ -196,6 +220,13 @@
         <item quantity="one">%1$s downvote</item>
         <item quantity="other">%1$s downvotes</item>
     </plurals>
+
+    <string name="post_type_label_post">Post</string>
+    <string name="post_type_label_prompt">Prompt</string>
+    <string name="vote_up_content_description">Upvote</string>
+    <string name="vote_down_content_description">Downvote</string>
+    <string name="comment_context_post">Comment on post</string>
+    <string name="comment_context_prompt">Comment on prompt</string>
 
 
 </resources>

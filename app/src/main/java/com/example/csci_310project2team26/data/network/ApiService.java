@@ -96,6 +96,7 @@ public interface ApiService {
     // Posts endpoints
     @GET("api/posts")
     Call<PostsResponse> getPosts(
+        @Header("Authorization") String token,
         @Query("sort") String sort,
         @Query("limit") Integer limit,
         @Query("offset") Integer offset,
@@ -104,6 +105,7 @@ public interface ApiService {
 
     @GET("api/posts/prompts")
     Call<PostsResponse> getPromptPosts(
+        @Header("Authorization") String token,
         @Query("sort") String sort,
         @Query("limit") Integer limit,
         @Query("offset") Integer offset
@@ -111,11 +113,13 @@ public interface ApiService {
 
     @GET("api/posts/trending")
     Call<PostsResponse> getTrendingPosts(
+        @Header("Authorization") String token,
         @Query("k") Integer k
     );
 
     @GET("api/posts/search")
     Call<PostsResponse> searchPosts(
+        @Header("Authorization") String token,
         @Query("q") String query,
         @Query("search_type") String searchType,
         @Query("limit") Integer limit,
@@ -124,7 +128,10 @@ public interface ApiService {
     );
 
     @GET("api/posts/{id}")
-    Call<PostResponse> getPostById(@Path("id") String id);
+    Call<PostResponse> getPostById(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
 
     @POST("api/posts")
     @FormUrlEncoded
@@ -135,7 +142,8 @@ public interface ApiService {
         @Field("llm_tag") String llmTag,
         @Field("is_prompt_post") boolean isPromptPost,
         @Field("prompt_section") String promptSection,
-        @Field("description_section") String descriptionSection
+        @Field("description_section") String descriptionSection,
+        @Field("anonymous") boolean anonymous
     );
 
     @PUT("api/posts/{id}")
@@ -148,7 +156,8 @@ public interface ApiService {
         @Field("llm_tag") String llmTag,
         @Field("is_prompt_post") Boolean isPromptPost,
         @Field("prompt_section") String promptSection,
-        @Field("description_section") String descriptionSection
+        @Field("description_section") String descriptionSection,
+        @Field("anonymous") Boolean anonymous
     );
 
     @DELETE("api/posts/{id}")
@@ -159,10 +168,16 @@ public interface ApiService {
 
     // Comments endpoints
     @GET("api/comments/post/{postId}")
-    Call<CommentsResponse> getComments(@Path("postId") String postId);
+    Call<CommentsResponse> getComments(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
 
     @GET("api/comments/user/{userId}")
-    Call<CommentsResponse> getCommentsByUser(@Path("userId") String userId);
+    Call<CommentsResponse> getCommentsByUser(
+        @Header("Authorization") String token,
+        @Path("userId") String userId
+    );
 
     @POST("api/comments")
     @FormUrlEncoded

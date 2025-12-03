@@ -29,9 +29,12 @@ public class Comment {
     
     @SerializedName("upvotes")
     private int upvotes;
-    
+
     @SerializedName("downvotes")
     private int downvotes;
+
+    @SerializedName("user_vote_type")
+    private String user_vote_type;
 
     public Comment() {}
 
@@ -65,6 +68,7 @@ public class Comment {
     public String getUpdated_at() { return updated_at; }
     public int getUpvotes() { return upvotes; }
     public int getDownvotes() { return downvotes; }
+    public String getUser_vote_type() { return user_vote_type; }
 
     public void setId(String id) { this.id = id; }
     public void setPost_id(String post_id) { this.post_id = post_id; }
@@ -76,6 +80,7 @@ public class Comment {
     public void setUpdated_at(String updated_at) { this.updated_at = updated_at; }
     public void setUpvotes(int upvotes) { this.upvotes = upvotes; }
     public void setDownvotes(int downvotes) { this.downvotes = downvotes; }
+    public void setUser_vote_type(String user_vote_type) { this.user_vote_type = user_vote_type; }
 }
 
 

@@ -2,6 +2,7 @@ package com.example.csci_310project2team26.data.repository;
 
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.network.ApiService;
+import com.example.csci_310project2team26.data.repository.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,11 @@ public class PostRepository {
                            Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPosts(
+                    authHeader,
                     sort != null ? sort : "newest",
                     limit != null ? limit : 50,
                     offset != null ? offset : 0,
@@ -145,8 +150,12 @@ public class PostRepository {
                 if (searchType != null && !"prompt_tag".equals(searchType) && isPromptPost != null) {
                     promptFilter = isPromptPost;
                 }
-                
+
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.searchPosts(
+                    authHeader,
                     query,
                     searchType != null ? searchType : "full_text",
                     limit != null ? limit : 50,
@@ -186,7 +195,10 @@ public class PostRepository {
     public void getPostById(String postId, Callback<Post> callback) {
         executorService.execute(() -> {
             try {
-                retrofit2.Call<ApiService.PostResponse> call = apiService.getPostById(postId);
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
+                retrofit2.Call<ApiService.PostResponse> call = apiService.getPostById(authHeader, postId);
                 Response<ApiService.PostResponse> response = call.execute();
                 
                 if (response.isSuccessful() && response.body() != null && response.body().post != null) {
@@ -209,6 +221,7 @@ public class PostRepository {
                            boolean isPromptPost,
                            String promptSection,
                            String descriptionSection,
+                           boolean anonymous,
                            Callback<Post> callback) {
         executorService.execute(() -> {
             try {
@@ -263,7 +276,8 @@ public class PostRepository {
                     safeLlmTag,
                     normalizedIsPromptPost,
                     safePromptSection,
-                    safeDescriptionSection
+                    safeDescriptionSection,
+                    anonymous
                 );
                 
                 Response<ApiService.PostResponse> response = call.execute();
@@ -369,7 +383,11 @@ public class PostRepository {
             try {
                 // Search for posts by author name (we'll need to get user name first or search)
                 // For now, we'll fetch all posts and filter - not ideal but works
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPosts(
+                    authHeader,
                     "newest",
                     100,
                     0,
@@ -408,6 +426,7 @@ public class PostRepository {
                            boolean isPromptPost,
                            String promptSection,
                            String descriptionSection,
+                           boolean anonymous,
                            Callback<Post> callback) {
         executorService.execute(() -> {
             try {
@@ -425,7 +444,8 @@ public class PostRepository {
                     llmTag,
                     isPromptPost,
                     promptSection,
-                    descriptionSection
+                    descriptionSection,
+                    anonymous
                 );
                 
                 Response<ApiService.PostResponse> response = call.execute();
@@ -496,7 +516,11 @@ public class PostRepository {
                                   Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPromptPosts(
+                    authHeader,
                     sort != null ? sort : "newest",
                     limit != null ? limit : 50,
                     offset != null ? offset : 0
@@ -530,7 +554,11 @@ public class PostRepository {
     public void fetchTrendingPosts(Integer k, Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getTrendingPosts(
+                    authHeader,
                     k != null ? k : 10
                 );
                 

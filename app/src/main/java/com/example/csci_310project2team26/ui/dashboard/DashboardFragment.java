@@ -78,6 +78,13 @@ public class DashboardFragment extends Fragment {
                     .setNegativeButton(R.string.cancel, null)
                     .show();
         });
+        postsAdapter.setOnBookmarkToggleListener((post, isBookmarked) -> {
+            if (getContext() != null) {
+                int messageId = isBookmarked ? R.string.bookmark_added : R.string.bookmark_removed;
+                Toast.makeText(getContext(), messageId, Toast.LENGTH_SHORT).show();
+            }
+        });
+        postsAdapter.setOnPostVoteListener((post, type) -> postsViewModel.voteOnPost(post.getId(), type));
         binding.promptPostsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.promptPostsRecyclerView.setAdapter(postsAdapter);
 

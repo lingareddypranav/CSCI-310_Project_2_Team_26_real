@@ -14,6 +14,7 @@
         android:paddingBottom="32dp">
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/editTitleLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/create_post_title_hint">
@@ -26,6 +27,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/editBodyLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -40,6 +42,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/editTagLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -57,7 +60,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/create_post_is_prompt" />
+            android:text="@string/create_post_is_prompt"
+            android:textAlignment="viewStart" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/editAnonymousSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/create_post_is_anonymous"
+            android:textAlignment="viewStart" />
 
         <LinearLayout
             android:id="@+id/editPromptSectionLayout"

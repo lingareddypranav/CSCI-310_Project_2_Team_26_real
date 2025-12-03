@@ -12,10 +12,11 @@ const getPosts = async (req, res) => {
     const userId = req.user?.userId; // Optional auth
 
     let queryText = `
-      SELECT 
+      SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -90,10 +91,11 @@ const getPromptPosts = async (req, res) => {
     const { sort = 'newest', limit = 50, offset = 0 } = req.query;
 
     let queryText = `
-      SELECT 
+      SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -152,10 +154,11 @@ const getTrendingPosts = async (req, res) => {
     const { k = 10 } = req.query;
 
     const queryText = `
-      SELECT 
+      SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -206,10 +209,11 @@ const searchPosts = async (req, res) => {
     }
 
     let queryText = `
-      SELECT 
+      SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -291,10 +295,11 @@ const getPostById = async (req, res) => {
     const { id } = req.params;
 
     const result = await query(
-      `SELECT 
+      `SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -343,6 +348,7 @@ const createPost = async (req, res) => {
     const llm_tag = (req.body.llm_tag || req.body.tag || '').trim();
     const prompt_section = (req.body.prompt_section || '').trim();
     const description_section = (req.body.description_section || '').trim();
+    const isAnonymous = req.body.anonymous === true || req.body.anonymous === 'true';
 
     // Ensure is_prompt_post is treated as a boolean even when sent as a string from form data.
     // If the toggle is on but no prompt content is provided, treat the post as a regular post
@@ -390,8 +396,8 @@ const createPost = async (req, res) => {
 
     // Insert post
     const insertResult = await query(
-      `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO posts (author_id, title, content, llm_tag, is_prompt_post, prompt_section, description_section, anonymous)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         authorId,
@@ -400,7 +406,8 @@ const createPost = async (req, res) => {
         llm_tag,
         isPromptPost || false,
         prompt_section || null,
-        description_section || null
+        description_section || null,
+        isAnonymous || false
       ]
     );
 
@@ -408,10 +415,11 @@ const createPost = async (req, res) => {
 
     // Fetch full post data with author_name, vote counts, and comment count
     const result = await query(
-      `SELECT 
+      `SELECT
         p.id,
         p.author_id,
         u.name as author_name,
+        p.anonymous,
         p.title,
         p.content,
         p.prompt_section,
@@ -449,11 +457,13 @@ const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { title, content, llm_tag, is_prompt_post, prompt_section, description_section } = req.body;
+    const { title, content, llm_tag, is_prompt_post, prompt_section, description_section, anonymous } = req.body;
 
     // Normalize boolean value in case it comes through as a string
     const normalizedIsPromptPost =
       is_prompt_post === undefined ? undefined : is_prompt_post === true || is_prompt_post === 'true';
+    const normalizedAnonymous =
+      anonymous === undefined ? undefined : anonymous === true || anonymous === 'true';
 
     // Check if post exists and user is author
     const postCheck = await query(
@@ -503,6 +513,10 @@ const updatePost = async (req, res) => {
       updates.push(`description_section = $${paramCount++}`);
       values.push(description_section);
     }
+    if (normalizedAnonymous !== undefined) {
+      updates.push(`anonymous = $${paramCount++}`);
+      values.push(normalizedAnonymous);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({
@@ -513,10 +527,10 @@ const updatePost = async (req, res) => {
     values.push(id);
 
     const queryText = `
-      UPDATE posts 
+      UPDATE posts
       SET ${updates.join(', ')}
       WHERE id = $${paramCount}
-      RETURNING id, author_id, title, content, prompt_section, description_section, llm_tag, is_prompt_post, created_at, updated_at
+      RETURNING id, author_id, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous, created_at, updated_at
     `;
 
     const result = await query(queryText, values);
