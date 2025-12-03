@@ -30,6 +30,16 @@ public class PostDetailViewModel extends ViewModel {
             @Override
             public void onSuccess(Post result) {
                 loading.postValue(false);
+                Post existing = post.getValue();
+                if (result != null
+                        && result.getUser_vote_type() == null
+                        && existing != null
+                        && existing.getUser_vote_type() != null) {
+                    // Preserve the user's known vote selection when the backend response
+                    // does not echo it back. This keeps the arrow fill state from
+                    // clearing after a vote even if the server omits the user_vote_type.
+                    result.setUser_vote_type(existing.getUser_vote_type());
+                }
                 post.postValue(result);
             }
 
