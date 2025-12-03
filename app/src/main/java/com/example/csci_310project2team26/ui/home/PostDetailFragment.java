@@ -274,11 +274,26 @@ public class PostDetailFragment extends Fragment {
             binding.dateTextView.setText(dateText);
         }
 
-        // Show delete and version history buttons only for own posts
+        // Show edit, delete and version history buttons only for own posts
         String currentUserId = SessionManager.getUserId();
         boolean isOwnPost = currentUserId != null && post.getAuthor_id() != null 
                 && currentUserId.equals(post.getAuthor_id());
         
+        if (binding.editPostButton != null) {
+            if (isOwnPost) {
+                binding.editPostButton.setVisibility(View.VISIBLE);
+                binding.editPostButton.setOnClickListener(v -> {
+                    if (postId != null && !postId.isEmpty()) {
+                        Bundle args = new Bundle();
+                        args.putString("postId", postId);
+                        Navigation.findNavController(binding.getRoot()).navigate(R.id.action_postDetailFragment_to_editPostFragment, args);
+                    }
+                });
+            } else {
+                binding.editPostButton.setVisibility(View.GONE);
+            }
+        }
+
         if (binding.deletePostButton != null) {
             if (isOwnPost) {
                 binding.deletePostButton.setVisibility(View.VISIBLE);
@@ -295,7 +310,7 @@ public class PostDetailFragment extends Fragment {
                     if (postId != null && !postId.isEmpty()) {
                         Bundle args = new Bundle();
                         args.putString("postId", postId);
-                        Navigation.findNavController(binding.getRoot()).navigate(R.id.postVersionsFragment, args);
+                        Navigation.findNavController(binding.getRoot()).navigate(R.id.action_postDetailFragment_to_postVersionsFragment, args);
                     }
                 });
             } else {

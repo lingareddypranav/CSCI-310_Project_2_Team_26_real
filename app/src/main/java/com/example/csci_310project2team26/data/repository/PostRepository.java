@@ -436,15 +436,32 @@ public class PostRepository {
                     return;
                 }
                 
+                // Normalize fields - ensure empty strings are sent as empty, not null
+                // This ensures the backend receives the values correctly
+                String safeTitle = title != null ? title.trim() : "";
+                String safeContent = content != null ? content.trim() : "";
+                String safeLlmTag = llmTag != null ? llmTag.trim() : "";
+                
+                // For prompt sections, send empty string if null (backend will handle it)
+                // This ensures the field is sent in form data
+                String safePromptSection = promptSection != null ? promptSection.trim() : "";
+                String safeDescriptionSection = descriptionSection != null ? descriptionSection.trim() : "";
+                
+                // If not a prompt post, send empty strings for prompt fields to clear them
+                if (!isPromptPost) {
+                    safePromptSection = "";
+                    safeDescriptionSection = "";
+                }
+                
                 retrofit2.Call<ApiService.PostResponse> call = apiService.updatePost(
                     "Bearer " + token,
                     postId,
-                    title,
-                    content,
-                    llmTag,
+                    safeTitle,
+                    safeContent,
+                    safeLlmTag,
                     isPromptPost,
-                    promptSection,
-                    descriptionSection,
+                    safePromptSection.isEmpty() ? null : safePromptSection,
+                    safeDescriptionSection.isEmpty() ? null : safeDescriptionSection,
                     anonymous
                 );
                 

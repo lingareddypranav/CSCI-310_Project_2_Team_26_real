@@ -578,11 +578,11 @@ const updatePost = async (req, res) => {
     }
     if (prompt_section !== undefined) {
       updates.push(`prompt_section = $${paramCount++}`);
-      values.push(prompt_section);
+      values.push(prompt_section || null); // Convert empty string to null
     }
     if (description_section !== undefined) {
       updates.push(`description_section = $${paramCount++}`);
-      values.push(description_section);
+      values.push(description_section || null); // Convert empty string to null
     }
     if (normalizedAnonymous !== undefined) {
       updates.push(`anonymous = $${paramCount++}`);

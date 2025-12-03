@@ -81,6 +81,47 @@ CREATE TABLE IF NOT EXISTS votes (
     UNIQUE(user_id, post_id, comment_id)
 );
 
+-- Post versions table (for version history)
+CREATE TABLE IF NOT EXISTS post_versions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    content TEXT,
+    prompt_section TEXT,
+    description_section TEXT,
+    llm_tag VARCHAR(100) NOT NULL,
+    is_prompt_post BOOLEAN DEFAULT FALSE,
+    anonymous BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(post_id, version_number)
+);
+
+-- Bookmarks table (for user bookmarks)
+CREATE TABLE IF NOT EXISTS bookmarks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, post_id)
+);
+
+-- Drafts table (for post drafts)
+CREATE TABLE IF NOT EXISTS drafts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(500),
+    content TEXT,
+    prompt_section TEXT,
+    description_section TEXT,
+    llm_tag VARCHAR(100),
+    is_prompt_post BOOLEAN DEFAULT FALSE,
+    anonymous BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_llm_tag ON posts(llm_tag);
@@ -94,6 +135,12 @@ CREATE INDEX IF NOT EXISTS idx_votes_comment ON votes(comment_id);
 CREATE INDEX IF NOT EXISTS idx_votes_user ON votes(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id);
+CREATE INDEX IF NOT EXISTS idx_post_versions_post ON post_versions(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_versions_created_at ON post_versions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_post ON bookmarks(post_id);
+CREATE INDEX IF NOT EXISTS idx_drafts_user ON drafts(user_id);
+CREATE INDEX IF NOT EXISTS idx_drafts_updated_at ON drafts(updated_at DESC);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -115,5 +162,8 @@ CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_drafts_updated_at BEFORE UPDATE ON drafts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

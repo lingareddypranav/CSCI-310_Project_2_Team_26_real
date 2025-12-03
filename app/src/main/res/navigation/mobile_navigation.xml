@@ -61,7 +61,14 @@
         android:id="@+id/postDetailFragment"
         android:name="com.example.csci_310project2team26.ui.home.PostDetailFragment"
         android:label="Post"
-        tools:layout="@layout/fragment_post_detail" />
+        tools:layout="@layout/fragment_post_detail">
+        <action
+            android:id="@+id/action_postDetailFragment_to_editPostFragment"
+            app:destination="@id/editPostFragment" />
+        <action
+            android:id="@+id/action_postDetailFragment_to_postVersionsFragment"
+            app:destination="@id/postVersionsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileSettingsFragment"
