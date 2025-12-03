@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.example.csci_310project2team26.R;
+import com.example.csci_310project2team26.data.model.Draft;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.databinding.FragmentCreatePostBinding;
 import com.example.csci_310project2team26.viewmodel.CreatePostViewModel;
@@ -32,49 +33,44 @@ public class CreatePostFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
         draftsViewModel = new ViewModelProvider(requireActivity()).get(DraftsViewModel.class);
 
-        // Always start with prompt mode off to avoid leaking prior state when navigating back to
-        // this screen.
         binding.promptSwitch.setChecked(false);
         binding.anonymousSwitch.setChecked(false);
-        if (binding.promptSectionLayout != null) {
-            binding.promptSectionLayout.setVisibility(View.GONE);
-        }
-        if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
-            ((View) binding.bodyEditText.getParent()).setVisibility(View.VISIBLE);
-        }
+
+        binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> updatePromptUi(isChecked));
+        updatePromptUi(binding.promptSwitch.isChecked());
 
         binding.publishButton.setOnClickListener(v -> onPublishClicked());
         binding.saveDraftButton.setOnClickListener(v -> onSaveDraftClicked());
         binding.viewDraftsButton.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_navigation_create_post_to_savedDraftsFragment));
 
-        // Show/hide prompt fields based on toggle
-        binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (binding.promptSectionLayout != null) {
-                binding.promptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            }
-
-            // When turning prompt mode off, clear any lingering prompt content so it isn't
-            // accidentally submitted or used to infer a prompt post type on the backend.
-            if (!isChecked) {
-                if (binding.promptSectionEditText != null) {
-                    binding.promptSectionEditText.setText("");
-                }
-                if (binding.descriptionSectionEditText != null) {
-                    binding.descriptionSectionEditText.setText("");
-                }
-            }
-
-            // Hide the normal body field for prompt posts and show it for regular posts
-            if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
-                View bodyContainer = (View) binding.bodyEditText.getParent();
-                bodyContainer.setVisibility(isChecked ? View.GONE : View.VISIBLE);
-            }
-        });
-        
         observeViewModel();
+        observeDraftSelection();
 
         return binding.getRoot();
+    }
+
+    private void updatePromptUi(boolean isChecked) {
+        if (binding.promptSectionLayout != null) {
+            binding.promptSectionLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        }
+
+        // When turning prompt mode off, clear any lingering prompt content so it isn't
+        // accidentally submitted or used to infer a prompt post type on the backend.
+        if (!isChecked) {
+            if (binding.promptSectionEditText != null) {
+                binding.promptSectionEditText.setText("");
+            }
+            if (binding.descriptionSectionEditText != null) {
+                binding.descriptionSectionEditText.setText("");
+            }
+        }
+
+        // Hide the normal body field for prompt posts and show it for regular posts
+        if (binding.bodyEditText != null && binding.bodyEditText.getParent() instanceof View) {
+            View bodyContainer = (View) binding.bodyEditText.getParent();
+            bodyContainer.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+        }
     }
 
     private void observeViewModel() {
@@ -101,6 +97,56 @@ public class CreatePostFragment extends Fragment {
         });
 
         viewModel.getCreatedPost().observe(getViewLifecycleOwner(), this::handlePostCreated);
+    }
+
+    private void observeDraftSelection() {
+        draftsViewModel.getDraftToResume().observe(getViewLifecycleOwner(), draft -> {
+            if (draft != null) {
+                bindDraftToForm(draft);
+                draftsViewModel.clearDraftToResume();
+            }
+        });
+    }
+
+    private void bindDraftToForm(Draft draft) {
+        if (draft == null) {
+            return;
+        }
+
+        if (binding.titleEditText != null) {
+            binding.titleEditText.setText(draft.getTitle());
+        }
+        if (binding.tagEditText != null) {
+            binding.tagEditText.setText(draft.getTag());
+        }
+
+        // Temporarily detach listener to avoid clearing fields while updating programmatically
+        binding.promptSwitch.setOnCheckedChangeListener(null);
+        binding.promptSwitch.setChecked(draft.isPrompt());
+        updatePromptUi(draft.isPrompt());
+        binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> updatePromptUi(isChecked));
+
+        if (draft.isPrompt()) {
+            if (binding.promptSectionEditText != null) {
+                binding.promptSectionEditText.setText(draft.getPromptSection());
+            }
+            if (binding.descriptionSectionEditText != null) {
+                binding.descriptionSectionEditText.setText(draft.getDescriptionSection());
+            }
+            if (binding.bodyEditText != null) {
+                binding.bodyEditText.setText("");
+            }
+        } else {
+            if (binding.bodyEditText != null) {
+                binding.bodyEditText.setText(draft.getBody());
+            }
+            if (binding.promptSectionEditText != null) {
+                binding.promptSectionEditText.setText("");
+            }
+            if (binding.descriptionSectionEditText != null) {
+                binding.descriptionSectionEditText.setText("");
+            }
+        }
     }
 
     private void onPublishClicked() {

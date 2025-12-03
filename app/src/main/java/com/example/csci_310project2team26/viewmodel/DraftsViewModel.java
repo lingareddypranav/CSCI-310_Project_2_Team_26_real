@@ -14,9 +14,14 @@ import java.util.UUID;
 
 public class DraftsViewModel extends ViewModel {
     private final MutableLiveData<List<Draft>> drafts = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Draft> draftToResume = new MutableLiveData<>();
 
     public LiveData<List<Draft>> getDrafts() {
         return drafts;
+    }
+
+    public LiveData<Draft> getDraftToResume() {
+        return draftToResume;
     }
 
     public void saveDraft(String title,
@@ -50,5 +55,26 @@ public class DraftsViewModel extends ViewModel {
         current.add(newDraft);
         current.sort(Comparator.comparingLong(Draft::getUpdatedAt).reversed());
         drafts.postValue(Collections.unmodifiableList(current));
+    }
+
+    public void selectDraft(Draft draft) {
+        draftToResume.postValue(draft);
+    }
+
+    public void clearDraftToResume() {
+        draftToResume.postValue(null);
+    }
+
+    public void deleteDraft(String draftId) {
+        List<Draft> current = drafts.getValue();
+        if (current == null || current.isEmpty()) {
+            return;
+        }
+
+        List<Draft> updated = new ArrayList<>(current);
+        boolean removed = updated.removeIf(draft -> draft.getId().equals(draftId));
+        if (removed) {
+            drafts.postValue(Collections.unmodifiableList(updated));
+        }
     }
 }
