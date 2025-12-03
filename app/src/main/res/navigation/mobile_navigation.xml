@@ -35,7 +35,11 @@
         android:id="@+id/navigation_create_post"
         android:name="com.example.csci_310project2team26.ui.createpost.CreatePostFragment"
         android:label="@string/title_create_post"
-        tools:layout="@layout/fragment_create_post" />
+        tools:layout="@layout/fragment_create_post" >
+        <action
+            android:id="@+id/action_navigation_create_post_to_savedDraftsFragment"
+            app:destination="@id/savedDraftsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_notifications"
@@ -93,4 +97,10 @@
             android:id="@+id/action_trendingPostsFragment_to_postDetailFragment"
             app:destination="@id/postDetailFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/savedDraftsFragment"
+        android:name="com.example.csci_310project2team26.ui.drafts.SavedDraftsFragment"
+        android:label="@string/saved_drafts_title"
+        tools:layout="@layout/fragment_saved_drafts" />
 </navigation>
