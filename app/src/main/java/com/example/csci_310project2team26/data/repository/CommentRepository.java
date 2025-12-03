@@ -83,7 +83,10 @@ public class CommentRepository {
     public void fetchComments(String postId, Callback<CommentsResult> callback) {
         executorService.execute(() -> {
             try {
-                retrofit2.Call<ApiService.CommentsResponse> call = apiService.getComments(postId);
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
+                retrofit2.Call<ApiService.CommentsResponse> call = apiService.getComments(authHeader, postId);
                 Response<ApiService.CommentsResponse> response = call.execute();
                 
                 if (response.isSuccessful() && response.body() != null) {
@@ -220,7 +223,10 @@ public class CommentRepository {
     public void fetchCommentsByUser(String userId, Callback<List<Comment>> callback) {
         executorService.execute(() -> {
             try {
-                retrofit2.Call<ApiService.CommentsResponse> call = apiService.getCommentsByUser(userId);
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
+                retrofit2.Call<ApiService.CommentsResponse> call = apiService.getCommentsByUser(authHeader, userId);
                 Response<ApiService.CommentsResponse> response = call.execute();
                 
                 if (response.isSuccessful() && response.body() != null) {

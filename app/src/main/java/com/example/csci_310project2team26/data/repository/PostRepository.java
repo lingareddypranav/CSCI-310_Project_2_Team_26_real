@@ -94,7 +94,11 @@ public class PostRepository {
                            Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPosts(
+                    authHeader,
                     sort != null ? sort : "newest",
                     limit != null ? limit : 50,
                     offset != null ? offset : 0,
@@ -379,7 +383,11 @@ public class PostRepository {
             try {
                 // Search for posts by author name (we'll need to get user name first or search)
                 // For now, we'll fetch all posts and filter - not ideal but works
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPosts(
+                    authHeader,
                     "newest",
                     100,
                     0,
@@ -508,7 +516,11 @@ public class PostRepository {
                                   Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getPromptPosts(
+                    authHeader,
                     sort != null ? sort : "newest",
                     limit != null ? limit : 50,
                     offset != null ? offset : 0
@@ -542,7 +554,11 @@ public class PostRepository {
     public void fetchTrendingPosts(Integer k, Callback<PostsResult> callback) {
         executorService.execute(() -> {
             try {
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.getTrendingPosts(
+                    authHeader,
                     k != null ? k : 10
                 );
                 

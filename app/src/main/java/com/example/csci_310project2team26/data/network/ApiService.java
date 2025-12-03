@@ -96,6 +96,7 @@ public interface ApiService {
     // Posts endpoints
     @GET("api/posts")
     Call<PostsResponse> getPosts(
+        @Header("Authorization") String token,
         @Query("sort") String sort,
         @Query("limit") Integer limit,
         @Query("offset") Integer offset,
@@ -104,6 +105,7 @@ public interface ApiService {
 
     @GET("api/posts/prompts")
     Call<PostsResponse> getPromptPosts(
+        @Header("Authorization") String token,
         @Query("sort") String sort,
         @Query("limit") Integer limit,
         @Query("offset") Integer offset
@@ -111,6 +113,7 @@ public interface ApiService {
 
     @GET("api/posts/trending")
     Call<PostsResponse> getTrendingPosts(
+        @Header("Authorization") String token,
         @Query("k") Integer k
     );
 
@@ -165,10 +168,16 @@ public interface ApiService {
 
     // Comments endpoints
     @GET("api/comments/post/{postId}")
-    Call<CommentsResponse> getComments(@Path("postId") String postId);
+    Call<CommentsResponse> getComments(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
 
     @GET("api/comments/user/{userId}")
-    Call<CommentsResponse> getCommentsByUser(@Path("userId") String userId);
+    Call<CommentsResponse> getCommentsByUser(
+        @Header("Authorization") String token,
+        @Path("userId") String userId
+    );
 
     @POST("api/comments")
     @FormUrlEncoded
