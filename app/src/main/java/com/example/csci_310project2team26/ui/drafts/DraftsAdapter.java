@@ -87,9 +87,14 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
 
             String previewText;
             if (draft.isPrompt()) {
-                previewText = !TextUtils.isEmpty(draft.getPromptSection())
-                        ? draft.getPromptSection()
-                        : draft.getDescriptionSection();
+                List<String> sections = new ArrayList<>();
+                if (!TextUtils.isEmpty(draft.getPromptSection())) {
+                    sections.add(itemView.getContext().getString(R.string.draft_prompt_label) + " " + draft.getPromptSection());
+                }
+                if (!TextUtils.isEmpty(draft.getDescriptionSection())) {
+                    sections.add(itemView.getContext().getString(R.string.draft_description_label) + " " + draft.getDescriptionSection());
+                }
+                previewText = sections.isEmpty() ? draft.getBody() : TextUtils.join("\n", sections);
             } else {
                 previewText = draft.getBody();
             }
