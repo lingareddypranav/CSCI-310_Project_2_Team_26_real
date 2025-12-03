@@ -5,16 +5,18 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.csci_310project2team26.data.model.Draft;
+import com.example.csci_310project2team26.data.repository.DraftRepository;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 public class DraftsViewModel extends ViewModel {
+    private final DraftRepository draftRepository = new DraftRepository();
+    
     private final MutableLiveData<List<Draft>> drafts = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Draft> draftToResume = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
+    private final MutableLiveData<String> error = new MutableLiveData<>(null);
 
     public LiveData<List<Draft>> getDrafts() {
         return drafts;
@@ -24,37 +26,71 @@ public class DraftsViewModel extends ViewModel {
         return draftToResume;
     }
 
+    public LiveData<Boolean> getLoading() {
+        return loading;
+    }
+
+    public LiveData<String> getError() {
+        return error;
+    }
+
+    public void loadDrafts() {
+        loading.postValue(true);
+        error.postValue(null);
+
+        draftRepository.getDrafts(new DraftRepository.Callback<List<Draft>>() {
+            @Override
+            public void onSuccess(List<Draft> result) {
+                loading.postValue(false);
+                drafts.postValue(result != null ? result : new ArrayList<>());
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+                drafts.postValue(new ArrayList<>());
+            }
+        });
+    }
+
     public void saveDraft(String title,
                           String body,
                           String tag,
                           boolean prompt,
                           String promptSection,
-                          String descriptionSection) {
+                          String descriptionSection,
+                          boolean anonymous) {
         if (title == null || title.trim().isEmpty()) {
+            error.postValue("Title is required");
             return;
         }
 
-        long now = System.currentTimeMillis();
-        Draft newDraft = new Draft(
-                UUID.randomUUID().toString(),
-                title.trim(),
-                body != null ? body.trim() : "",
-                tag != null ? tag.trim() : "",
-                prompt,
-                promptSection != null ? promptSection.trim() : "",
-                descriptionSection != null ? descriptionSection.trim() : "",
-                now
-        );
+        loading.postValue(true);
+        error.postValue(null);
 
-        List<Draft> current = drafts.getValue();
-        if (current == null) {
-            current = new ArrayList<>();
-        } else {
-            current = new ArrayList<>(current);
-        }
-        current.add(newDraft);
-        current.sort(Comparator.comparingLong(Draft::getUpdatedAt).reversed());
-        drafts.postValue(Collections.unmodifiableList(current));
+        draftRepository.createDraft(
+            title.trim(),
+            body != null ? body.trim() : null,
+            promptSection != null ? promptSection.trim() : null,
+            descriptionSection != null ? descriptionSection.trim() : null,
+            tag != null ? tag.trim() : null,
+            prompt,
+            anonymous,
+            new DraftRepository.Callback<Draft>() {
+                @Override
+                public void onSuccess(Draft result) {
+                    loading.postValue(false);
+                    loadDrafts(); // Reload to get updated list
+                }
+
+                @Override
+                public void onError(String err) {
+                    loading.postValue(false);
+                    error.postValue(err);
+                }
+            }
+        );
     }
 
     public void selectDraft(Draft draft) {
@@ -66,15 +102,21 @@ public class DraftsViewModel extends ViewModel {
     }
 
     public void deleteDraft(String draftId) {
-        List<Draft> current = drafts.getValue();
-        if (current == null || current.isEmpty()) {
-            return;
-        }
+        loading.postValue(true);
+        error.postValue(null);
 
-        List<Draft> updated = new ArrayList<>(current);
-        boolean removed = updated.removeIf(draft -> draft.getId().equals(draftId));
-        if (removed) {
-            drafts.postValue(Collections.unmodifiableList(updated));
-        }
+        draftRepository.deleteDraft(draftId, new DraftRepository.Callback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                loadDrafts(); // Reload to get updated list
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+            }
+        });
     }
 }

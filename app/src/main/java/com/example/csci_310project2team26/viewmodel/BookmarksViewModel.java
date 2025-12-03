@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.csci_310project2team26.data.model.Post;
-import com.example.csci_310project2team26.data.repository.BookmarkManager;
+import com.example.csci_310project2team26.data.repository.BookmarkRepository;
 import com.example.csci_310project2team26.data.repository.PostRepository;
 
 import java.util.ArrayList;
@@ -18,11 +18,23 @@ public class BookmarksViewModel extends ViewModel {
     public static final String FILTER_PROMPT = "prompt";
 
     private final MutableLiveData<List<Post>> bookmarks = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
+    private final MutableLiveData<String> error = new MutableLiveData<>(null);
+    
+    private final BookmarkRepository bookmarkRepository = new BookmarkRepository();
     private final PostRepository postRepository = new PostRepository();
     private String currentFilter = FILTER_ALL;
 
     public LiveData<List<Post>> getBookmarks() {
         return bookmarks;
+    }
+
+    public LiveData<Boolean> getLoading() {
+        return loading;
+    }
+
+    public LiveData<String> getError() {
+        return error;
     }
 
     public void setFilter(String filter) {
@@ -31,13 +43,30 @@ public class BookmarksViewModel extends ViewModel {
     }
 
     public void refreshBookmarks() {
+        loading.postValue(true);
+        error.postValue(null);
+
         Boolean isPromptPost = null;
         if (FILTER_PROMPT.equals(currentFilter)) {
             isPromptPost = true;
         } else if (FILTER_NORMAL.equals(currentFilter)) {
             isPromptPost = false;
         }
-        bookmarks.postValue(BookmarkManager.getBookmarkedPosts(isPromptPost));
+
+        bookmarkRepository.getBookmarks(isPromptPost, new BookmarkRepository.Callback<List<Post>>() {
+            @Override
+            public void onSuccess(List<Post> result) {
+                loading.postValue(false);
+                bookmarks.postValue(result != null ? result : new ArrayList<>());
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+                bookmarks.postValue(new ArrayList<>());
+            }
+        });
     }
 
     public void onBookmarkToggled() {

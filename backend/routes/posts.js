@@ -32,5 +32,10 @@ router.put('/:id', authenticateToken, postController.updatePost);
 // Delete post (requires auth, user must be author)
 router.delete('/:id', authenticateToken, postController.deletePost);
 
+// Version history routes
+const versionController = require('../controllers/versionController');
+router.get('/:postId/versions', authenticateToken, versionController.getPostVersions);
+router.post('/:postId/revert/:versionId', authenticateToken, versionController.revertToVersion);
+
 module.exports = router;
 

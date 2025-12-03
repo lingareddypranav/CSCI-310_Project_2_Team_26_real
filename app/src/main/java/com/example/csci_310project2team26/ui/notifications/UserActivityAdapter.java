@@ -21,6 +21,7 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
     public interface OnActivityClickListener {
         void onActivityClicked(UserActivityItem item);
         void onActivityDeleteClicked(UserActivityItem item);
+        void onVersionHistoryClicked(UserActivityItem item);
     }
 
     private final OnActivityClickListener listener;
@@ -47,6 +48,7 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
         private final ImageView typeIconImageView;
         private final TextView titleTextView;
         private final TextView subtitleTextView;
+        private final MaterialButton versionHistoryButton;
         private final MaterialButton deleteButton;
 
         ActivityViewHolder(@NonNull View itemView) {
@@ -54,6 +56,7 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
             typeIconImageView = itemView.findViewById(R.id.typeIconImageView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             subtitleTextView = itemView.findViewById(R.id.subtitleTextView);
+            versionHistoryButton = itemView.findViewById(R.id.versionHistoryButton);
             deleteButton = itemView.findViewById(R.id.deleteActivityButton);
         }
 
@@ -91,6 +94,19 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
                 }
             }
             subtitleTextView.setText(subtitleBuilder.toString());
+            
+            // Show version history button only for posts
+            if (item.getType() == UserActivityItem.Type.POST) {
+                versionHistoryButton.setVisibility(View.VISIBLE);
+                versionHistoryButton.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onVersionHistoryClicked(item);
+                    }
+                });
+            } else {
+                versionHistoryButton.setVisibility(View.GONE);
+            }
+            
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onActivityClicked(item);

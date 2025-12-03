@@ -49,6 +49,11 @@ public class NotificationsFragment extends Fragment {
             public void onActivityDeleteClicked(UserActivityItem item) {
                 NotificationsFragment.this.onActivityDelete(item);
             }
+
+            @Override
+            public void onVersionHistoryClicked(UserActivityItem item) {
+                NotificationsFragment.this.onVersionHistoryClicked(item);
+            }
         });
         binding.activityRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.activityRecyclerView.setAdapter(adapter);
@@ -136,6 +141,20 @@ public class NotificationsFragment extends Fragment {
                 }
                 break;
         }
+    }
+
+    private void onVersionHistoryClicked(UserActivityItem item) {
+        if (item == null || item.getType() != UserActivityItem.Type.POST) {
+            return;
+        }
+        String postId = item.getId();
+        if (postId == null || postId.isEmpty()) {
+            Toast.makeText(requireContext(), "Post ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString("postId", postId);
+        Navigation.findNavController(binding.getRoot()).navigate(R.id.postVersionsFragment, args);
     }
 
     @Override

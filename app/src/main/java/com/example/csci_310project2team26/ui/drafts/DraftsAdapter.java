@@ -77,8 +77,9 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
             if (!TextUtils.isEmpty(draft.getTag())) {
                 metaBuilder.append(" • ").append(draft.getTag());
             }
+            long updatedAtTimestamp = parseTimestamp(draft.getUpdatedAt());
             CharSequence relativeTime = DateUtils.getRelativeTimeSpanString(
-                    draft.getUpdatedAt(),
+                    updatedAtTimestamp > 0 ? updatedAtTimestamp : System.currentTimeMillis(),
                     System.currentTimeMillis(),
                     DateUtils.MINUTE_IN_MILLIS
             );
@@ -102,6 +103,29 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
 
             useDraftButton.setOnClickListener(v -> actionListener.onUseDraft(draft));
             deleteDraftButton.setOnClickListener(v -> actionListener.onDeleteDraft(draft));
+        }
+
+        private long parseTimestamp(String dateString) {
+            if (TextUtils.isEmpty(dateString)) {
+                return 0L;
+            }
+            try {
+                // Try parsing as ISO 8601 date string
+                java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                format.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                java.util.Date date = format.parse(dateString);
+                if (date != null) {
+                    return date.getTime();
+                }
+            } catch (Exception e) {
+                // Try parsing as long timestamp
+                try {
+                    return Long.parseLong(dateString);
+                } catch (NumberFormatException e2) {
+                    return 0L;
+                }
+            }
+            return 0L;
         }
     }
 

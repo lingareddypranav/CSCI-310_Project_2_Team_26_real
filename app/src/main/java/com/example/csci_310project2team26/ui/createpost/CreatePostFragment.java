@@ -188,7 +188,8 @@ public class CreatePostFragment extends Fragment {
             return;
         }
 
-        draftsViewModel.saveDraft(title, body, tag, isPrompt, promptSection, descriptionSection);
+        boolean isAnonymous = binding.anonymousSwitch.isChecked();
+        draftsViewModel.saveDraft(title, body, tag, isPrompt, promptSection, descriptionSection, isAnonymous);
         Toast.makeText(requireContext(), R.string.create_post_draft_saved, Toast.LENGTH_SHORT).show();
     }
 

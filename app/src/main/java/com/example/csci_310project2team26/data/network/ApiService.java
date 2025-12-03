@@ -4,6 +4,7 @@ import com.example.csci_310project2team26.data.model.Profile;
 import com.example.csci_310project2team26.data.repository.AuthRepository;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.model.Comment;
+import com.example.csci_310project2team26.data.model.PostVersion;
 
 import java.util.List;
 
@@ -238,6 +239,91 @@ public interface ApiService {
     @GET("api/votes/comment/{commentId}")
     Call<VoteCountsResponse> getCommentVoteCounts(@Path("commentId") String commentId);
 
+    // Version history endpoints
+    @GET("api/posts/{postId}/versions")
+    Call<VersionsResponse> getPostVersions(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
+
+    @POST("api/posts/{postId}/revert/{versionId}")
+    Call<PostResponse> revertToVersion(
+        @Header("Authorization") String token,
+        @Path("postId") String postId,
+        @Path("versionId") String versionId
+    );
+
+    // Bookmarks endpoints
+    @POST("api/bookmarks")
+    @FormUrlEncoded
+    Call<com.google.gson.JsonObject> addBookmark(
+        @Header("Authorization") String token,
+        @Field("postId") String postId
+    );
+
+    @DELETE("api/bookmarks/{postId}")
+    Call<Void> removeBookmark(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
+
+    @GET("api/bookmarks")
+    Call<PostsResponse> getBookmarks(
+        @Header("Authorization") String token,
+        @Query("is_prompt_post") String isPromptPost
+    );
+
+    @GET("api/bookmarks/{postId}/check")
+    Call<BookmarkStatusResponse> isBookmarked(
+        @Header("Authorization") String token,
+        @Path("postId") String postId
+    );
+
+    // Drafts endpoints
+    @POST("api/drafts")
+    @FormUrlEncoded
+    Call<DraftResponse> createDraft(
+        @Header("Authorization") String token,
+        @Field("title") String title,
+        @Field("content") String content,
+        @Field("prompt_section") String promptSection,
+        @Field("description_section") String descriptionSection,
+        @Field("llm_tag") String llmTag,
+        @Field("is_prompt_post") boolean isPromptPost,
+        @Field("anonymous") boolean anonymous
+    );
+
+    @GET("api/drafts")
+    Call<DraftsResponse> getDrafts(
+        @Header("Authorization") String token
+    );
+
+    @GET("api/drafts/{id}")
+    Call<DraftResponse> getDraftById(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
+
+    @PUT("api/drafts/{id}")
+    @FormUrlEncoded
+    Call<DraftResponse> updateDraft(
+        @Header("Authorization") String token,
+        @Path("id") String id,
+        @Field("title") String title,
+        @Field("content") String content,
+        @Field("prompt_section") String promptSection,
+        @Field("description_section") String descriptionSection,
+        @Field("llm_tag") String llmTag,
+        @Field("is_prompt_post") Boolean isPromptPost,
+        @Field("anonymous") Boolean anonymous
+    );
+
+    @DELETE("api/drafts/{id}")
+    Call<Void> deleteDraft(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
+
     // Simple response wrappers
     class PostsResponse {
         public List<Post> posts;
@@ -267,6 +353,34 @@ public interface ApiService {
         public int upvotes;
         public int downvotes;
         public int total;
+    }
+
+    class VersionsResponse {
+        public List<com.example.csci_310project2team26.data.model.PostVersion> versions;
+        public int count;
+    }
+
+    class BookmarkStatusResponse {
+        public boolean bookmarked;
+    }
+
+    class DraftResponse {
+        public com.example.csci_310project2team26.data.model.Draft draft;
+        // Backend returns draft directly, but we'll handle both formats
+        public String id;
+        public String title;
+        public String content;
+        public String prompt_section;
+        public String description_section;
+        public String llm_tag;
+        public boolean is_prompt_post;
+        public boolean anonymous;
+        public String updated_at;
+    }
+
+    class DraftsResponse {
+        public List<com.example.csci_310project2team26.data.model.Draft> drafts;
+        public int count;
     }
     
     /**

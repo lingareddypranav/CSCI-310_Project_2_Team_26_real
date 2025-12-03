@@ -14,7 +14,7 @@ import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.repository.SessionManager;
 import com.example.csci_310project2team26.data.repository.VotePreferenceManager;
-import com.example.csci_310project2team26.data.repository.BookmarkManager;
+import com.example.csci_310project2team26.data.repository.BookmarkRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -280,14 +280,77 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
 
             if (bookmarkButton != null) {
-                boolean isBookmarked = BookmarkManager.isBookmarked(post);
-                updateBookmarkIcon(isBookmarked);
-                bookmarkButton.setOnClickListener(v -> {
-                    boolean newState = BookmarkManager.toggleBookmark(post);
-                    updateBookmarkIcon(newState);
-                    if (bookmarkToggleListener != null) {
-                        bookmarkToggleListener.onBookmarkToggle(post, newState);
+                // Check bookmark status asynchronously
+                BookmarkRepository bookmarkRepo = new BookmarkRepository();
+                bookmarkRepo.isBookmarked(post.getId(), new BookmarkRepository.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        if (itemView.getContext() != null) {
+                            itemView.post(() -> updateBookmarkIcon(Boolean.TRUE.equals(result)));
+                        }
                     }
+
+                    @Override
+                    public void onError(String error) {
+                        // Default to not bookmarked on error
+                        if (itemView.getContext() != null) {
+                            itemView.post(() -> updateBookmarkIcon(false));
+                        }
+                    }
+                });
+
+                bookmarkButton.setOnClickListener(v -> {
+                    bookmarkButton.setEnabled(false);
+                    BookmarkRepository repo = new BookmarkRepository();
+                    repo.isBookmarked(post.getId(), new BookmarkRepository.Callback<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean isCurrentlyBookmarked) {
+                            if (Boolean.TRUE.equals(isCurrentlyBookmarked)) {
+                                // Remove bookmark
+                                repo.removeBookmark(post.getId(), new BookmarkRepository.Callback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void result) {
+                                        itemView.post(() -> {
+                                            updateBookmarkIcon(false);
+                                            bookmarkButton.setEnabled(true);
+                                            if (bookmarkToggleListener != null) {
+                                                bookmarkToggleListener.onBookmarkToggle(post, false);
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(String error) {
+                                        itemView.post(() -> bookmarkButton.setEnabled(true));
+                                    }
+                                });
+                            } else {
+                                // Add bookmark
+                                repo.addBookmark(post.getId(), new BookmarkRepository.Callback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void result) {
+                                        itemView.post(() -> {
+                                            updateBookmarkIcon(true);
+                                            bookmarkButton.setEnabled(true);
+                                            if (bookmarkToggleListener != null) {
+                                                bookmarkToggleListener.onBookmarkToggle(post, true);
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(String error) {
+                                        itemView.post(() -> bookmarkButton.setEnabled(true));
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            itemView.post(() -> bookmarkButton.setEnabled(true));
+                        }
+                    });
                 });
             }
 

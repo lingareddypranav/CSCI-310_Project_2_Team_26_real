@@ -19,6 +19,8 @@ const profileRoutes = require('./routes/profile');
 const postRoutes = require('./routes/posts');
 const commentRoutes = require('./routes/comments');
 const voteRoutes = require('./routes/votes');
+const bookmarkRoutes = require('./routes/bookmarks');
+const draftRoutes = require('./routes/drafts');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +54,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/drafts', draftRoutes);
 
 // 404 handler
 app.use((req, res) => {

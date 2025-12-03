@@ -27,14 +27,16 @@ const getPosts = async (req, res) => {
         p.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
         COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count,
+        COALESCE(uv.type, '') as user_vote_type
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN votes v ON v.post_id = p.id
+      LEFT JOIN votes uv ON uv.post_id = p.id AND uv.user_id = $1
     `;
 
-    const params = [];
-    let paramCount = 1;
+    const params = [userId || null];
+    let paramCount = 2;
 
     // Filter by prompt post type
     if (is_prompt_post !== undefined) {
@@ -42,7 +44,7 @@ const getPosts = async (req, res) => {
       params.push(is_prompt_post === 'true');
     }
 
-    queryText += ` GROUP BY p.id, u.name`;
+    queryText += ` GROUP BY p.id, u.name, uv.type`;
 
     // Sorting
     switch (sort) {
@@ -90,6 +92,8 @@ const getPromptPosts = async (req, res) => {
   try {
     const { sort = 'newest', limit = 50, offset = 0 } = req.query;
 
+    const userId = req.user?.userId; // Optional auth
+
     let queryText = `
       SELECT
         p.id,
@@ -106,12 +110,14 @@ const getPromptPosts = async (req, res) => {
         p.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
         COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count,
+        COALESCE(uv.type, '') as user_vote_type
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN votes v ON v.post_id = p.id
+      LEFT JOIN votes uv ON uv.post_id = p.id AND uv.user_id = $1
       WHERE p.is_prompt_post = TRUE
-      GROUP BY p.id, u.name
+      GROUP BY p.id, u.name, uv.type
     `;
 
     // Sorting
@@ -129,9 +135,9 @@ const getPromptPosts = async (req, res) => {
         queryText += ` ORDER BY p.created_at DESC`;
     }
 
-    queryText += ` LIMIT $1 OFFSET $2`;
+    queryText += ` LIMIT $2 OFFSET $3`;
 
-    const result = await query(queryText, [parseInt(limit), parseInt(offset)]);
+    const result = await query(queryText, [userId || null, parseInt(limit), parseInt(offset)]);
 
     res.json({
       posts: result.rows,
@@ -152,6 +158,7 @@ const getPromptPosts = async (req, res) => {
 const getTrendingPosts = async (req, res) => {
   try {
     const { k = 10 } = req.query;
+    const userId = req.user?.userId; // Optional auth
 
     const queryText = `
       SELECT
@@ -170,18 +177,20 @@ const getTrendingPosts = async (req, res) => {
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
         COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count,
+        COALESCE(uv.type, '') as user_vote_type,
         (COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0) - 
          COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)) as score
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN votes v ON v.post_id = p.id
+      LEFT JOIN votes uv ON uv.post_id = p.id AND uv.user_id = $1
       WHERE p.created_at >= NOW() - INTERVAL '7 days'
-      GROUP BY p.id, u.name
+      GROUP BY p.id, u.name, uv.type
       ORDER BY score DESC, p.created_at DESC
-      LIMIT $1
+      LIMIT $2
     `;
 
-    const result = await query(queryText, [parseInt(k)]);
+    const result = await query(queryText, [userId || null, parseInt(k)]);
 
     res.json({
       posts: result.rows,
@@ -208,6 +217,8 @@ const searchPosts = async (req, res) => {
       });
     }
 
+    const userId = req.user?.userId; // Optional auth
+
     let queryText = `
       SELECT
         p.id,
@@ -224,15 +235,17 @@ const searchPosts = async (req, res) => {
         p.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
         COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count,
+        COALESCE(uv.type, '') as user_vote_type
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN votes v ON v.post_id = p.id
+      LEFT JOIN votes uv ON uv.post_id = p.id AND uv.user_id = $1
       WHERE
     `;
 
-    const params = [];
-    let paramCount = 1;
+    const params = [userId || null];
+    let paramCount = 2;
 
     // Search type filtering
     switch (search_type) {
@@ -266,7 +279,7 @@ const searchPosts = async (req, res) => {
       params.push(is_prompt_post === 'true' || is_prompt_post === true);
     }
 
-    queryText += ` GROUP BY p.id, u.name ORDER BY p.created_at DESC`;
+    queryText += ` GROUP BY p.id, u.name, uv.type ORDER BY p.created_at DESC`;
     queryText += ` LIMIT $${paramCount++} OFFSET $${paramCount++}`;
     params.push(parseInt(limit), parseInt(offset));
 
@@ -293,6 +306,7 @@ const searchPosts = async (req, res) => {
 const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.userId; // Optional auth
 
     const result = await query(
       `SELECT
@@ -310,13 +324,15 @@ const getPostById = async (req, res) => {
         p.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
         COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::INTEGER as comment_count,
+        COALESCE(uv.type, '') as user_vote_type
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN votes v ON v.post_id = p.id
+      LEFT JOIN votes uv ON uv.post_id = p.id AND uv.user_id = $2
       WHERE p.id = $1
-      GROUP BY p.id, u.name`,
-      [id]
+      GROUP BY p.id, u.name, uv.type`,
+      [id, userId || null]
     );
 
     if (result.rows.length === 0) {
@@ -482,6 +498,42 @@ const updatePost = async (req, res) => {
         error: 'Forbidden',
         message: 'You can only edit your own posts'
       });
+    }
+
+    // Save current post state as a new version before updating
+    const currentPost = await query(
+      `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
+       FROM posts WHERE id = $1`,
+      [id]
+    );
+
+    if (currentPost.rows.length > 0) {
+      const oldPost = currentPost.rows[0];
+      // Get the next version number
+      const versionResult = await query(
+        `SELECT COALESCE(MAX(version_number), 0) + 1 as next_version
+         FROM post_versions WHERE post_id = $1`,
+        [id]
+      );
+      const nextVersion = versionResult.rows[0]?.next_version || 1;
+
+      // Insert version
+      await query(
+        `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          id,
+          nextVersion,
+          oldPost.title,
+          oldPost.content,
+          oldPost.prompt_section,
+          oldPost.description_section,
+          oldPost.llm_tag,
+          oldPost.is_prompt_post,
+          oldPost.anonymous
+        ]
+      );
+      console.log(`Saved version ${nextVersion} for post ${id}`);
     }
 
     // Build update query

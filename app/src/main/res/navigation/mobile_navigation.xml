@@ -52,6 +52,9 @@
         <action
             android:id="@+id/action_navigation_notifications_to_editCommentFragment"
             app:destination="@id/editCommentFragment" />
+        <action
+            android:id="@+id/action_navigation_notifications_to_postVersionsFragment"
+            app:destination="@id/postVersionsFragment" />
     </fragment>
 
     <fragment
@@ -103,4 +106,10 @@
         android:name="com.example.csci_310project2team26.ui.drafts.SavedDraftsFragment"
         android:label="@string/saved_drafts_title"
         tools:layout="@layout/fragment_saved_drafts" />
+
+    <fragment
+        android:id="@+id/postVersionsFragment"
+        android:name="com.example.csci_310project2team26.ui.versions.PostVersionsFragment"
+        android:label="Version History"
+        tools:layout="@layout/fragment_post_versions" />
 </navigation>

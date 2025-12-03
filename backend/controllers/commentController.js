@@ -9,9 +9,13 @@ const { query } = require('../config/database');
 const getCommentsByPost = async (req, res) => {
   try {
     const { postId } = req.params;
+    const userId = req.user?.userId; // Optional auth
 
-    const result = await query(
-      `SELECT 
+    const params = [postId];
+    let paramCount = 2;
+
+    let queryText = `
+      SELECT 
         c.id,
         c.post_id,
         c.author_id,
@@ -21,15 +25,23 @@ const getCommentsByPost = async (req, res) => {
         c.created_at,
         c.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
-        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes
+        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
+        uv.type as user_vote_type
       FROM comments c
       LEFT JOIN users u ON c.author_id = u.id
       LEFT JOIN votes v ON v.comment_id = c.id
+      ${userId ? `LEFT JOIN votes uv ON uv.comment_id = c.id AND uv.user_id = $${paramCount++}` : 'LEFT JOIN votes uv ON false'}
       WHERE c.post_id = $1
-      GROUP BY c.id, u.name
-      ORDER BY c.created_at ASC`,
-      [postId]
-    );
+    `;
+
+    if (userId) {
+      params.push(userId);
+    }
+
+    queryText += ` GROUP BY c.id, u.name, uv.type
+      ORDER BY c.created_at ASC`;
+
+    const result = await query(queryText, params);
 
     res.json({
       comments: result.rows,
@@ -191,10 +203,14 @@ const deleteComment = async (req, res) => {
 // Get comments by user ID
 const getCommentsByUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId: targetUserId } = req.params;
+    const currentUserId = req.user?.userId; // Optional auth for vote type
 
-    const result = await query(
-      `SELECT 
+    const params = [targetUserId];
+    let paramCount = 2;
+
+    let queryText = `
+      SELECT 
         c.id,
         c.post_id,
         c.author_id,
@@ -204,15 +220,23 @@ const getCommentsByUser = async (req, res) => {
         c.created_at,
         c.updated_at,
         COALESCE(SUM(CASE WHEN v.type = 'up' THEN 1 ELSE 0 END), 0)::INTEGER as upvotes,
-        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes
+        COALESCE(SUM(CASE WHEN v.type = 'down' THEN 1 ELSE 0 END), 0)::INTEGER as downvotes,
+        uv.type as user_vote_type
       FROM comments c
       LEFT JOIN users u ON c.author_id = u.id
       LEFT JOIN votes v ON v.comment_id = c.id
+      ${currentUserId ? `LEFT JOIN votes uv ON uv.comment_id = c.id AND uv.user_id = $${paramCount++}` : 'LEFT JOIN votes uv ON false'}
       WHERE c.author_id = $1
-      GROUP BY c.id, u.name
-      ORDER BY c.created_at DESC`,
-      [userId]
-    );
+    `;
+
+    if (currentUserId) {
+      params.push(currentUserId);
+    }
+
+    queryText += ` GROUP BY c.id, u.name, uv.type
+      ORDER BY c.created_at DESC`;
+
+    const result = await query(queryText, params);
 
     res.json({
       comments: result.rows,

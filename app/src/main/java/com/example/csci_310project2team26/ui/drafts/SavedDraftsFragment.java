@@ -47,6 +47,13 @@ public class SavedDraftsFragment extends Fragment {
                 .getOnBackPressedDispatcher()
                 .onBackPressed());
 
+        observeViewModel();
+        draftsViewModel.loadDrafts();
+
+        return binding.getRoot();
+    }
+
+    private void observeViewModel() {
         draftsViewModel.getDrafts().observe(getViewLifecycleOwner(), drafts -> {
             adapter.submitList(drafts);
             boolean isEmpty = drafts == null || drafts.isEmpty();
@@ -54,7 +61,13 @@ public class SavedDraftsFragment extends Fragment {
             binding.draftsRecyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         });
 
-        return binding.getRoot();
+        draftsViewModel.getLoading().observe(getViewLifecycleOwner(), loading -> {
+            // Could show loading indicator if needed
+        });
+
+        draftsViewModel.getError().observe(getViewLifecycleOwner(), error -> {
+            // Could show error message if needed
+        });
     }
 
     @Override
