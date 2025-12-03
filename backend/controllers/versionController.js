@@ -30,7 +30,7 @@ const getPostVersions = async (req, res) => {
       });
     }
 
-    // Get all saved versions from post_versions table
+    // Get all saved versions from post_versions table (historical snapshots)
     const savedVersions = await query(
       `SELECT id, post_id, version_number, title, content, prompt_section, description_section, 
               llm_tag, is_prompt_post, anonymous, created_at, created_by
@@ -49,55 +49,49 @@ const getPostVersions = async (req, res) => {
       [postId]
     );
 
-    // Get the max version number
-    const maxVersion = savedVersions.rows.length > 0 
-      ? Math.max(...savedVersions.rows.map(v => v.version_number))
-      : 0;
-
-    // Combine versions: current state first (as latest), then saved versions
     const allVersions = [];
+    const normalize = (val) => val === null || val === undefined ? null : val;
     
-    // Only add current post state as a separate version if:
-    // 1. There are saved versions (meaning edits have been made)
-    // 2. AND the current state is different from the latest saved version
-    if (currentPost.rows.length > 0 && savedVersions.rows.length > 0) {
+    if (currentPost.rows.length > 0) {
       const current = currentPost.rows[0];
-      const latestSaved = savedVersions.rows[0]; // Already sorted DESC, so first is latest
+      const maxVersion = savedVersions.rows.length > 0 
+        ? Math.max(...savedVersions.rows.map(v => v.version_number))
+        : 0;
       
-      // Compare current state with latest saved version
-      // Check if any field has changed
-      const hasChanged = 
-        current.title !== latestSaved.title ||
-        current.content !== latestSaved.content ||
-        current.prompt_section !== latestSaved.prompt_section ||
-        current.description_section !== latestSaved.description_section ||
-        current.llm_tag !== latestSaved.llm_tag ||
-        current.is_prompt_post !== latestSaved.is_prompt_post ||
-        current.anonymous !== latestSaved.anonymous;
+      // Always add current state as the latest version
+      allVersions.push({
+        id: current.id,
+        post_id: current.post_id,
+        version_number: maxVersion + 1,
+        title: current.title,
+        content: current.content,
+        prompt_section: current.prompt_section,
+        description_section: current.description_section,
+        llm_tag: current.llm_tag,
+        is_prompt_post: current.is_prompt_post,
+        anonymous: current.anonymous,
+        created_at: current.created_at,
+        created_by: current.created_by,
+        is_current: true
+      });
       
-      // Only add current as separate version if it's different from latest saved version
-      if (hasChanged) {
-        const currentVersionNumber = maxVersion + 1;
-        allVersions.push({
-          id: current.id, // Use post ID as version ID for current state
-          post_id: current.post_id,
-          version_number: currentVersionNumber,
-          title: current.title,
-          content: current.content,
-          prompt_section: current.prompt_section,
-          description_section: current.description_section,
-          llm_tag: current.llm_tag,
-          is_prompt_post: current.is_prompt_post,
-          anonymous: current.anonymous,
-          created_at: current.created_at,
-          created_by: current.created_by,
-          is_current: true // Flag to indicate this is the current version
-        });
+      // Add saved versions, but skip any that match the current state (to avoid duplicates)
+      for (const saved of savedVersions.rows) {
+        const savedMatchesCurrent = 
+          normalize(saved.title) === normalize(current.title) &&
+          normalize(saved.content) === normalize(current.content) &&
+          normalize(saved.prompt_section) === normalize(current.prompt_section) &&
+          normalize(saved.description_section) === normalize(current.description_section) &&
+          normalize(saved.llm_tag) === normalize(current.llm_tag) &&
+          saved.is_prompt_post === current.is_prompt_post &&
+          saved.anonymous === current.anonymous;
+        
+        // Only add saved version if it's different from current (prevents duplicates)
+        if (!savedMatchesCurrent) {
+          allVersions.push({ ...saved, is_current: false });
+        }
       }
     }
-    
-    // Add all saved versions
-    allVersions.push(...savedVersions.rows.map(v => ({ ...v, is_current: false })));
 
     res.json({
       versions: allVersions,
