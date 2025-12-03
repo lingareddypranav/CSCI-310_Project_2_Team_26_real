@@ -85,7 +85,7 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
                     String parentLabel = item.isPromptPost()
                             ? itemView.getContext().getString(R.string.post_type_label_prompt)
                             : itemView.getContext().getString(R.string.post_type_label_post);
-                    subtitleBuilder.append('\n').append(parentLabel).append(": ").append(detail);
+                    subtitleBuilder.append('\n').append(detail);
                 } else {
                     subtitleBuilder.append(" • ").append(detail);
                 }
