@@ -26,6 +26,7 @@ public class NotificationsViewModel extends ViewModel {
     private final CommentRepository commentRepository = new CommentRepository();
 
     private final Map<String, String> postTitleCache = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> postPromptCache = new ConcurrentHashMap<>();
 
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>(null);
@@ -167,6 +168,7 @@ public class NotificationsViewModel extends ViewModel {
                 String title = !TextUtils.isEmpty(post.getTitle()) ? post.getTitle() : "(untitled post)";
                 if (!TextUtils.isEmpty(post.getId())) {
                     postTitleCache.put(post.getId(), title);
+                    postPromptCache.put(post.getId(), post.isIs_prompt_post());
                 }
                 items.add(new UserActivityItem(
                         UserActivityItem.Type.POST,
@@ -190,8 +192,11 @@ public class NotificationsViewModel extends ViewModel {
                                 ? truncate(comment.getText(), 80)
                                 : "(comment)");
                 String postTitle = lookupPostTitle(comment.getPost_id());
+                boolean isPromptPost = isPromptPost(comment.getPost_id());
                 String detail = !TextUtils.isEmpty(comment.getPost_id())
-                        ? String.format(Locale.getDefault(), "Post: %s", postTitle)
+                        ? String.format(Locale.getDefault(), "%s: %s",
+                        isPromptPost ? "Prompt" : "Post",
+                        postTitle)
                         : "";
                 items.add(new UserActivityItem(
                         UserActivityItem.Type.COMMENT,
@@ -200,7 +205,7 @@ public class NotificationsViewModel extends ViewModel {
                         title,
                         detail,
                         updated > 0 ? updated : now,
-                        false
+                        isPromptPost
                 ));
             }
         }
@@ -243,6 +248,14 @@ public class NotificationsViewModel extends ViewModel {
         return postId;
     }
 
+    private boolean isPromptPost(String postId) {
+        if (TextUtils.isEmpty(postId)) {
+            return false;
+        }
+        Boolean cached = postPromptCache.get(postId);
+        return cached != null && cached;
+    }
+
     private void fetchMissingPostTitles(List<Comment> comments) {
         if (comments == null || comments.isEmpty()) {
             return;
@@ -263,7 +276,8 @@ public class NotificationsViewModel extends ViewModel {
                     }
                     String title = !TextUtils.isEmpty(result.getTitle()) ? result.getTitle() : result.getId();
                     postTitleCache.put(result.getId(), title);
-                    updateCommentTitles(result.getId(), title);
+                    postPromptCache.put(result.getId(), result.isIs_prompt_post());
+                    updateCommentTitles(result.getId(), title, result.isIs_prompt_post());
                 }
 
                 @Override
@@ -274,7 +288,7 @@ public class NotificationsViewModel extends ViewModel {
         }
     }
 
-    private void updateCommentTitles(String postId, String title) {
+    private void updateCommentTitles(String postId, String title, boolean isPromptPost) {
         List<UserActivityItem> current = activityItems.getValue();
         if (current == null || current.isEmpty()) {
             return;
@@ -288,9 +302,9 @@ public class NotificationsViewModel extends ViewModel {
                         item.getId(),
                         item.getPostId(),
                         item.getTitle(),
-                        String.format(Locale.getDefault(), "Post: %s", title),
+                        String.format(Locale.getDefault(), "%s: %s", isPromptPost ? "Prompt" : "Post", title),
                         item.getTimestamp(),
-                        item.isPromptPost()
+                        isPromptPost
                 ));
             } else {
                 updated.add(item);

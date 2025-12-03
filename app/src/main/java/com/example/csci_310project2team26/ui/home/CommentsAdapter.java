@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     private OnCommentEditListener editListener;
     private OnCommentDeleteListener deleteListener;
     private String currentUserId;
+    private boolean parentIsPrompt;
 
     public CommentsAdapter() {
         this.currentUserId = SessionManager.getUserId();
@@ -53,6 +55,11 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
         this.deleteListener = listener;
     }
 
+    public void setParentIsPrompt(boolean parentIsPrompt) {
+        this.parentIsPrompt = parentIsPrompt;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -68,13 +75,14 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     @Override
     public int getItemCount() { return items.size(); }
 
-    static class CommentViewHolder extends RecyclerView.ViewHolder {
+    class CommentViewHolder extends RecyclerView.ViewHolder {
         private final TextView authorTextView;
         private final TextView dateTextView;
+        private final TextView contextTextView;
         private final TextView titleTextView;
         private final TextView textTextView;
-        private final Button upvoteButton;
-        private final Button downvoteButton;
+        private final ImageButton upvoteButton;
+        private final ImageButton downvoteButton;
         private final TextView upvoteCountTextView;
         private final TextView downvoteCountTextView;
         private final Button editCommentButton;
@@ -84,6 +92,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             super(itemView);
             authorTextView = itemView.findViewById(R.id.authorTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
+            contextTextView = itemView.findViewById(R.id.contextTextView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             textTextView = itemView.findViewById(R.id.textTextView);
             upvoteButton = itemView.findViewById(R.id.btnCommentUpvote);
@@ -107,6 +116,13 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             authorTextView.setText(comment.getAuthor_name() != null ? comment.getAuthor_name() : "");
             String dateText = formatDate(comment.getCreated_at(), resources);
             dateTextView.setText(dateText);
+
+            if (contextTextView != null) {
+                contextTextView.setVisibility(View.VISIBLE);
+                contextTextView.setText(parentIsPrompt
+                        ? resources.getString(R.string.comment_context_prompt)
+                        : resources.getString(R.string.comment_context_post));
+            }
             
             // Title (show only if exists)
             if (comment.getTitle() != null && !comment.getTitle().trim().isEmpty()) {
@@ -120,8 +136,12 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             textTextView.setText(comment.getText() != null ? comment.getText() : "");
             
             // Vote counts
-            upvoteCountTextView.setText(String.valueOf(Math.max(comment.getUpvotes(), 0)));
-            downvoteCountTextView.setText(String.valueOf(Math.max(comment.getDownvotes(), 0)));
+            int upvotes = Math.max(comment.getUpvotes(), 0);
+            int downvotes = Math.max(comment.getDownvotes(), 0);
+            upvoteCountTextView.setText(String.valueOf(upvotes));
+            downvoteCountTextView.setText(String.valueOf(downvotes));
+
+            updateVoteIcons(comment.getUser_vote_type());
 
             // Vote buttons
             upvoteButton.setOnClickListener(v -> {
@@ -156,6 +176,21 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             } else {
                 editCommentButton.setVisibility(View.GONE);
                 deleteCommentButton.setVisibility(View.GONE);
+            }
+        }
+
+        private void updateVoteIcons(String userVoteType) {
+            if (upvoteButton != null) {
+                boolean isUpvoted = "up".equalsIgnoreCase(userVoteType);
+                upvoteButton.setImageResource(isUpvoted
+                        ? R.drawable.ic_arrow_up_filled_24dp
+                        : R.drawable.ic_arrow_up_outline_24dp);
+            }
+            if (downvoteButton != null) {
+                boolean isDownvoted = "down".equalsIgnoreCase(userVoteType);
+                downvoteButton.setImageResource(isDownvoted
+                        ? R.drawable.ic_arrow_down_filled_24dp
+                        : R.drawable.ic_arrow_down_outline_24dp);
             }
         }
         

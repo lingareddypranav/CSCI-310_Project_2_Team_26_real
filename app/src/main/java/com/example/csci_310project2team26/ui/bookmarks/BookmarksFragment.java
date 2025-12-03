@@ -47,6 +47,7 @@ public class BookmarksFragment extends Fragment {
             }
             bookmarksViewModel.onBookmarkToggled();
         });
+        postsAdapter.setOnPostVoteListener((post, type) -> bookmarksViewModel.voteOnPost(post.getId(), type));
 
         binding.bookmarkedPostsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.bookmarkedPostsRecyclerView.setAdapter(postsAdapter);

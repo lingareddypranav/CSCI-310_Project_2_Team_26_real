@@ -42,6 +42,7 @@ public class PostDetailFragment extends Fragment {
     private CommentsAdapter commentsAdapter;
     private String postId;
     private int displayedCommentCount = 0;
+    private Post currentPost;
 
     @Nullable
     @Override
@@ -171,11 +172,14 @@ public class PostDetailFragment extends Fragment {
     
     private void updatePostUI(Post post) {
         if (binding == null || getContext() == null || post == null) return;
+
+        currentPost = post;
         
         binding.titleTextView.setText(post.getTitle() != null ? post.getTitle() : "");
         
         // Display content or prompt sections based on post type
         boolean isPromptPost = post.isIs_prompt_post();
+        commentsAdapter.setParentIsPrompt(isPromptPost);
         if (isPromptPost) {
             // For prompt posts, show prompt_section and description_section
             binding.contentTextView.setVisibility(View.GONE);
@@ -213,11 +217,12 @@ public class PostDetailFragment extends Fragment {
                     binding.descriptionSectionTextView.setVisibility(View.GONE);
                 }
             }
+
         } else {
             // For regular posts, show content
             binding.contentTextView.setVisibility(View.VISIBLE);
             binding.contentTextView.setText(post.getContent() != null ? post.getContent() : "");
-            
+
             // Hide prompt sections
             if (binding.promptSectionLabel != null) {
                 binding.promptSectionLabel.setVisibility(View.GONE);
@@ -286,6 +291,8 @@ public class PostDetailFragment extends Fragment {
         binding.upvoteCountTextView.setText(upvoteText);
         binding.downvoteCountTextView.setText(downvoteText);
         updateCommentCountText(displayedCommentCount);
+
+        updateVoteButtons(post.getUser_vote_type());
     }
 
     private void vote(String type) {
@@ -301,10 +308,73 @@ public class PostDetailFragment extends Fragment {
         if (Boolean.TRUE.equals(isVoting)) {
             return; // Already processing a vote
         }
-        
+
+        applyLocalVote(type);
+
         // Use ViewModel to vote (same pattern as comment voting)
         // This will automatically reload the post and update UI via LiveData
         postDetailViewModel.voteOnPost(postId, type);
+    }
+
+    private void applyLocalVote(String type) {
+        if (currentPost == null || binding == null) return;
+
+        String currentVote = currentPost.getUser_vote_type();
+        int upvotes = Math.max(currentPost.getUpvotes(), 0);
+        int downvotes = Math.max(currentPost.getDownvotes(), 0);
+        String newVote = type;
+
+        if ("up".equalsIgnoreCase(type)) {
+            if ("up".equalsIgnoreCase(currentVote)) {
+                newVote = null;
+                upvotes = Math.max(0, upvotes - 1);
+            } else {
+                upvotes += 1;
+                if ("down".equalsIgnoreCase(currentVote)) {
+                    downvotes = Math.max(0, downvotes - 1);
+                }
+            }
+        } else if ("down".equalsIgnoreCase(type)) {
+            if ("down".equalsIgnoreCase(currentVote)) {
+                newVote = null;
+                downvotes = Math.max(0, downvotes - 1);
+            } else {
+                downvotes += 1;
+                if ("up".equalsIgnoreCase(currentVote)) {
+                    upvotes = Math.max(0, upvotes - 1);
+                }
+            }
+        }
+
+        currentPost.setUser_vote_type(newVote);
+        currentPost.setUpvotes(upvotes);
+        currentPost.setDownvotes(downvotes);
+
+        NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
+        Resources resources = getResources();
+        String upvoteText = resources.getQuantityString(R.plurals.post_upvotes, upvotes, numberFormat.format(upvotes));
+        String downvoteText = resources.getQuantityString(R.plurals.post_downvotes, downvotes, numberFormat.format(downvotes));
+
+        binding.upvoteCountTextView.setText(upvoteText);
+        binding.downvoteCountTextView.setText(downvoteText);
+        updateVoteButtons(newVote);
+    }
+
+    private void updateVoteButtons(String userVoteType) {
+        if (binding == null) return;
+        boolean isUpvoted = "up".equalsIgnoreCase(userVoteType);
+        boolean isDownvoted = "down".equalsIgnoreCase(userVoteType);
+
+        if (binding.upvoteButton != null) {
+            binding.upvoteButton.setImageResource(isUpvoted
+                    ? R.drawable.ic_arrow_up_filled_24dp
+                    : R.drawable.ic_arrow_up_outline_24dp);
+        }
+        if (binding.downvoteButton != null) {
+            binding.downvoteButton.setImageResource(isDownvoted
+                    ? R.drawable.ic_arrow_down_filled_24dp
+                    : R.drawable.ic_arrow_down_outline_24dp);
+        }
     }
 
     private void addComment() {
