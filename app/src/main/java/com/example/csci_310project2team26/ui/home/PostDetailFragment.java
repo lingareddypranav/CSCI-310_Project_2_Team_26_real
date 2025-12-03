@@ -323,43 +323,15 @@ public class PostDetailFragment extends Fragment {
         if (currentPost == null || binding == null) return;
 
         String currentVote = currentPost.getUser_vote_type();
-        int upvotes = Math.max(currentPost.getUpvotes(), 0);
-        int downvotes = Math.max(currentPost.getDownvotes(), 0);
         String newVote = type;
 
-        if ("up".equalsIgnoreCase(type)) {
-            if ("up".equalsIgnoreCase(currentVote)) {
-                newVote = null;
-                upvotes = Math.max(0, upvotes - 1);
-            } else {
-                upvotes += 1;
-                if ("down".equalsIgnoreCase(currentVote)) {
-                    downvotes = Math.max(0, downvotes - 1);
-                }
-            }
-        } else if ("down".equalsIgnoreCase(type)) {
-            if ("down".equalsIgnoreCase(currentVote)) {
-                newVote = null;
-                downvotes = Math.max(0, downvotes - 1);
-            } else {
-                downvotes += 1;
-                if ("up".equalsIgnoreCase(currentVote)) {
-                    upvotes = Math.max(0, upvotes - 1);
-                }
-            }
+        if ("up".equalsIgnoreCase(type) && "up".equalsIgnoreCase(currentVote)) {
+            newVote = null;
+        } else if ("down".equalsIgnoreCase(type) && "down".equalsIgnoreCase(currentVote)) {
+            newVote = null;
         }
 
         currentPost.setUser_vote_type(newVote);
-        currentPost.setUpvotes(upvotes);
-        currentPost.setDownvotes(downvotes);
-
-        NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
-        Resources resources = getResources();
-        String upvoteText = resources.getQuantityString(R.plurals.post_upvotes, upvotes, numberFormat.format(upvotes));
-        String downvoteText = resources.getQuantityString(R.plurals.post_downvotes, downvotes, numberFormat.format(downvotes));
-
-        binding.upvoteCountTextView.setText(upvoteText);
-        binding.downvoteCountTextView.setText(downvoteText);
         updateVoteButtons(newVote);
     }
 

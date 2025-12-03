@@ -223,7 +223,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
             if (upvoteButton != null) {
                 upvoteButton.setOnClickListener(v -> {
-                    applyLocalVote(post, "up");
+                    toggleVoteSelection(post, "up");
                     if (voteListener != null) {
                         voteListener.onVote(post, "up");
                     }
@@ -231,7 +231,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
             if (downvoteButton != null) {
                 downvoteButton.setOnClickListener(v -> {
-                    applyLocalVote(post, "down");
+                    toggleVoteSelection(post, "down");
                     if (voteListener != null) {
                         voteListener.onVote(post, "down");
                     }
@@ -305,42 +305,19 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
         }
 
-        private void applyLocalVote(Post post, String type) {
+        private void toggleVoteSelection(Post post, String type) {
             if (post == null) return;
 
             String currentVote = post.getUser_vote_type();
-            int upvotes = Math.max(post.getUpvotes(), 0);
-            int downvotes = Math.max(post.getDownvotes(), 0);
             String newVote = type;
 
-            if ("up".equalsIgnoreCase(type)) {
-                if ("up".equalsIgnoreCase(currentVote)) {
-                    newVote = null;
-                    upvotes = Math.max(0, upvotes - 1);
-                } else {
-                    upvotes += 1;
-                    if ("down".equalsIgnoreCase(currentVote)) {
-                        downvotes = Math.max(0, downvotes - 1);
-                    }
-                }
-            } else if ("down".equalsIgnoreCase(type)) {
-                if ("down".equalsIgnoreCase(currentVote)) {
-                    newVote = null;
-                    downvotes = Math.max(0, downvotes - 1);
-                } else {
-                    downvotes += 1;
-                    if ("up".equalsIgnoreCase(currentVote)) {
-                        upvotes = Math.max(0, upvotes - 1);
-                    }
-                }
+            if ("up".equalsIgnoreCase(type) && "up".equalsIgnoreCase(currentVote)) {
+                newVote = null;
+            } else if ("down".equalsIgnoreCase(type) && "down".equalsIgnoreCase(currentVote)) {
+                newVote = null;
             }
 
             post.setUser_vote_type(newVote);
-            post.setUpvotes(upvotes);
-            post.setDownvotes(downvotes);
-
-            upvoteTextView.setText(numberFormat.format(upvotes));
-            downvoteTextView.setText(numberFormat.format(downvotes));
             updateVoteIcons(newVote);
         }
 
