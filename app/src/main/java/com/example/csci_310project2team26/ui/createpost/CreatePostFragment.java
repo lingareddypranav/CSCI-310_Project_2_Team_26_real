@@ -17,17 +17,20 @@ import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.databinding.FragmentCreatePostBinding;
 import com.example.csci_310project2team26.viewmodel.CreatePostViewModel;
+import com.example.csci_310project2team26.viewmodel.DraftsViewModel;
 
 public class CreatePostFragment extends Fragment {
 
     private FragmentCreatePostBinding binding;
     private CreatePostViewModel viewModel;
+    private DraftsViewModel draftsViewModel;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentCreatePostBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
+        draftsViewModel = new ViewModelProvider(requireActivity()).get(DraftsViewModel.class);
 
         // Always start with prompt mode off to avoid leaking prior state when navigating back to
         // this screen.
@@ -41,6 +44,9 @@ public class CreatePostFragment extends Fragment {
         }
 
         binding.publishButton.setOnClickListener(v -> onPublishClicked());
+        binding.saveDraftButton.setOnClickListener(v -> onSaveDraftClicked());
+        binding.viewDraftsButton.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.action_navigation_create_post_to_savedDraftsFragment));
 
         // Show/hide prompt fields based on toggle
         binding.promptSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -114,6 +120,30 @@ public class CreatePostFragment extends Fragment {
         }
 
         viewModel.createPost(title, body, tag, isPrompt, promptSection, descriptionSection, isAnonymous);
+    }
+
+    private void onSaveDraftClicked() {
+        String title = binding.titleEditText.getText() != null ? binding.titleEditText.getText().toString() : "";
+        String body = binding.bodyEditText.getText() != null ? binding.bodyEditText.getText().toString() : "";
+        String tag = binding.tagEditText.getText() != null ? binding.tagEditText.getText().toString() : "";
+        boolean isPrompt = binding.promptSwitch.isChecked();
+
+        String promptSection = null;
+        String descriptionSection = null;
+        if (isPrompt && binding.promptSectionEditText != null && binding.descriptionSectionEditText != null) {
+            promptSection = binding.promptSectionEditText.getText() != null ?
+                    binding.promptSectionEditText.getText().toString() : "";
+            descriptionSection = binding.descriptionSectionEditText.getText() != null ?
+                    binding.descriptionSectionEditText.getText().toString() : "";
+        }
+
+        if (title == null || title.trim().isEmpty()) {
+            Toast.makeText(requireContext(), R.string.create_post_draft_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        draftsViewModel.saveDraft(title, body, tag, isPrompt, promptSection, descriptionSection);
+        Toast.makeText(requireContext(), R.string.create_post_draft_saved, Toast.LENGTH_SHORT).show();
     }
 
     private void handlePostCreated(Post post) {

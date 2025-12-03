@@ -125,8 +125,12 @@
     <string name="create_post_is_prompt">Is this a prompt post?</string>
     <string name="create_post_is_anonymous">Post anonymously</string>
     <string name="create_post_submit">Publish</string>
+    <string name="create_post_save_draft">Save draft</string>
+    <string name="create_post_view_drafts">Saved drafts</string>
     <string name="create_post_success">Post created!</string>
     <string name="create_post_error">Unable to create post</string>
+    <string name="create_post_draft_saved">Draft saved locally</string>
+    <string name="create_post_draft_error">Add a title before saving your draft</string>
     <string name="title_edit_post">Edit Post</string>
     <string name="edit_post_save">Save changes</string>
     <string name="edit_post_success">Post updated!</string>
@@ -146,6 +150,12 @@
     <string name="remove_bookmark">Remove bookmark</string>
     <string name="bookmark_added">Saved to bookmarks</string>
     <string name="bookmark_removed">Removed from bookmarks</string>
+
+    <!-- Drafts -->
+    <string name="saved_drafts_title">Saved drafts</string>
+    <string name="saved_drafts_empty">You haven’t saved any drafts yet.</string>
+    <string name="draft_meta_prompt">Prompt</string>
+    <string name="draft_meta_post">Post</string>
     
     <!-- Search -->
     <string name="search_title">Search Posts</string>
