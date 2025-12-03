@@ -30,8 +30,8 @@ const getPostVersions = async (req, res) => {
       });
     }
 
-    // Get all versions
-    const result = await query(
+    // Get all saved versions from post_versions table
+    const savedVersions = await query(
       `SELECT id, post_id, version_number, title, content, prompt_section, description_section, 
               llm_tag, is_prompt_post, anonymous, created_at, created_by
        FROM post_versions
@@ -40,9 +40,51 @@ const getPostVersions = async (req, res) => {
       [postId]
     );
 
+    // Get current post state
+    const currentPost = await query(
+      `SELECT id, author_id as post_id, title, content, prompt_section, description_section, 
+              llm_tag, is_prompt_post, anonymous, updated_at as created_at, author_id as created_by
+       FROM posts
+       WHERE id = $1`,
+      [postId]
+    );
+
+    // Get the max version number to determine current version number
+    const maxVersion = savedVersions.rows.length > 0 
+      ? Math.max(...savedVersions.rows.map(v => v.version_number))
+      : 0;
+    
+    const currentVersionNumber = maxVersion + 1;
+
+    // Combine versions: current state first (as latest), then saved versions
+    const allVersions = [];
+    
+    // Add current post state as the latest version (if post exists)
+    if (currentPost.rows.length > 0) {
+      const current = currentPost.rows[0];
+      allVersions.push({
+        id: current.id, // Use post ID as version ID for current state
+        post_id: current.post_id,
+        version_number: currentVersionNumber,
+        title: current.title,
+        content: current.content,
+        prompt_section: current.prompt_section,
+        description_section: current.description_section,
+        llm_tag: current.llm_tag,
+        is_prompt_post: current.is_prompt_post,
+        anonymous: current.anonymous,
+        created_at: current.created_at,
+        created_by: current.created_by,
+        is_current: true // Flag to indicate this is the current version
+      });
+    }
+    
+    // Add all saved versions
+    allVersions.push(...savedVersions.rows.map(v => ({ ...v, is_current: false })));
+
     res.json({
-      versions: result.rows,
-      count: result.rows.length
+      versions: allVersions,
+      count: allVersions.length
     });
   } catch (error) {
     console.error('Get post versions error:', error);
@@ -78,21 +120,40 @@ const revertToVersion = async (req, res) => {
       });
     }
 
-    // Get version data
-    const versionResult = await query(
-      `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
-       FROM post_versions
-       WHERE id = $1 AND post_id = $2`,
-      [versionId, postId]
-    );
+    // Check if trying to revert to current version (versionId is the post ID)
+    let version;
+    if (versionId === postId) {
+      // Reverting to current version - get from posts table
+      const currentPost = await query(
+        `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
+         FROM posts WHERE id = $1`,
+        [postId]
+      );
+      
+      if (currentPost.rows.length === 0) {
+        return res.status(404).json({
+          error: 'Post not found'
+        });
+      }
+      
+      version = currentPost.rows[0];
+    } else {
+      // Reverting to a saved version - get from post_versions table
+      const versionResult = await query(
+        `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
+         FROM post_versions
+         WHERE id = $1 AND post_id = $2`,
+        [versionId, postId]
+      );
 
-    if (versionResult.rows.length === 0) {
-      return res.status(404).json({
-        error: 'Version not found'
-      });
+      if (versionResult.rows.length === 0) {
+        return res.status(404).json({
+          error: 'Version not found'
+        });
+      }
+
+      version = versionResult.rows[0];
     }
-
-    const version = versionResult.rows[0];
 
     // Get current post data to save as new version before reverting
     const currentPost = await query(

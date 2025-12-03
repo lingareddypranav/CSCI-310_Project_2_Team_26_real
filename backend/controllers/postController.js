@@ -491,7 +491,14 @@ const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { title, content, llm_tag, is_prompt_post, prompt_section, description_section, anonymous } = req.body;
+    // Get all fields from request body, handling both form data and JSON
+    let { title, content, llm_tag, is_prompt_post, prompt_section, description_section, anonymous } = req.body;
+    
+    // Normalize content - if it's an empty string, treat it as a valid update (to allow clearing content)
+    // Only skip if it's truly undefined (not sent in request)
+    if (content === '') {
+      content = ''; // Keep as empty string - will be converted to null in update query
+    }
 
     // Normalize boolean value in case it comes through as a string
     const normalizedIsPromptPost =
@@ -564,9 +571,15 @@ const updatePost = async (req, res) => {
       updates.push(`title = $${paramCount++}`);
       values.push(title);
     }
+    // Always update content if provided (including empty string)
+    // Empty string means "clear the content", undefined means "don't change it"
     if (content !== undefined) {
       updates.push(`content = $${paramCount++}`);
-      values.push(content);
+      // Convert empty string to null for database (TEXT fields should be null, not empty string)
+      values.push(content === '' ? null : content);
+      console.log(`Updating content for post ${id}: "${content}" -> ${content === '' ? 'null' : content}`);
+    } else {
+      console.log(`Content not provided for post ${id}, skipping content update`);
     }
     if (llm_tag !== undefined) {
       updates.push(`llm_tag = $${paramCount++}`);

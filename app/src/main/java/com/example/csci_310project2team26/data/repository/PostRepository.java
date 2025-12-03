@@ -453,11 +453,15 @@ public class PostRepository {
                     safeDescriptionSection = "";
                 }
                 
+                // CRITICAL: Always send content field, even if empty string
+                // Retrofit's @Field will send empty string, which backend will receive as "" (not undefined)
+                // This ensures content is always updated, even if changing from non-empty to empty
+                // For prompt posts, content might be empty, but we still send it to ensure the field is updated
                 retrofit2.Call<ApiService.PostResponse> call = apiService.updatePost(
                     "Bearer " + token,
                     postId,
                     safeTitle,
-                    safeContent,
+                    safeContent, // Always send, even if empty - backend will handle null conversion
                     safeLlmTag,
                     isPromptPost,
                     safePromptSection.isEmpty() ? null : safePromptSection,
