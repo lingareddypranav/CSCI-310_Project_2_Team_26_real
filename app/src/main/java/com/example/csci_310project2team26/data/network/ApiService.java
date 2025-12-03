@@ -116,6 +116,7 @@ public interface ApiService {
 
     @GET("api/posts/search")
     Call<PostsResponse> searchPosts(
+        @Header("Authorization") String token,
         @Query("q") String query,
         @Query("search_type") String searchType,
         @Query("limit") Integer limit,
@@ -124,7 +125,10 @@ public interface ApiService {
     );
 
     @GET("api/posts/{id}")
-    Call<PostResponse> getPostById(@Path("id") String id);
+    Call<PostResponse> getPostById(
+        @Header("Authorization") String token,
+        @Path("id") String id
+    );
 
     @POST("api/posts")
     @FormUrlEncoded

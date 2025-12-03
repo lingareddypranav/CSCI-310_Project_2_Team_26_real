@@ -2,6 +2,7 @@ package com.example.csci_310project2team26.data.repository;
 
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.network.ApiService;
+import com.example.csci_310project2team26.data.session.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,8 +146,12 @@ public class PostRepository {
                 if (searchType != null && !"prompt_tag".equals(searchType) && isPromptPost != null) {
                     promptFilter = isPromptPost;
                 }
-                
+
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
                 retrofit2.Call<ApiService.PostsResponse> call = apiService.searchPosts(
+                    authHeader,
                     query,
                     searchType != null ? searchType : "full_text",
                     limit != null ? limit : 50,
@@ -186,7 +191,10 @@ public class PostRepository {
     public void getPostById(String postId, Callback<Post> callback) {
         executorService.execute(() -> {
             try {
-                retrofit2.Call<ApiService.PostResponse> call = apiService.getPostById(postId);
+                String token = SessionManager.getToken();
+                String authHeader = token != null ? "Bearer " + token : null;
+
+                retrofit2.Call<ApiService.PostResponse> call = apiService.getPostById(authHeader, postId);
                 Response<ApiService.PostResponse> response = call.execute();
                 
                 if (response.isSuccessful() && response.body() != null && response.body().post != null) {
