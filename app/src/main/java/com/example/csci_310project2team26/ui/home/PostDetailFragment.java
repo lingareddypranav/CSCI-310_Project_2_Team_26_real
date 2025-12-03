@@ -236,6 +236,9 @@ public class PostDetailFragment extends Fragment {
             if (binding.descriptionSectionTextView != null) {
                 binding.descriptionSectionTextView.setVisibility(View.GONE);
             }
+            if (binding.promptDivider != null) {
+                binding.promptDivider.setVisibility(View.GONE);
+            }
         }
 
         Resources resources = getResources();
