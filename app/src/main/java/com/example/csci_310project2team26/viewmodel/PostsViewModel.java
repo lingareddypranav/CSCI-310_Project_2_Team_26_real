@@ -130,8 +130,31 @@ public class PostsViewModel extends ViewModel {
                     @Override
                     public void onError(String err) {
                         loading.postValue(false);
-                        error.postValue(err);
-                    }
-                });
+                    error.postValue(err);
+                }
+            });
+    }
+
+    public void voteOnPost(String postId, String type) {
+        if (postId == null || type == null) {
+            error.postValue("Invalid vote request");
+            return;
+        }
+
+        loading.postValue(true);
+        error.postValue(null);
+
+        postRepository.votePost(postId, type, new PostRepository.Callback<PostRepository.VoteActionResult>() {
+            @Override
+            public void onSuccess(PostRepository.VoteActionResult result) {
+                loadPosts(currentSort, currentQuery, currentLimit, currentOffset, currentIsPromptPost);
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err != null ? err : "Failed to vote on post");
+            }
+        });
     }
 }
