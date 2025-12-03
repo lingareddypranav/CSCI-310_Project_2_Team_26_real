@@ -31,7 +31,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     private OnCommentEditListener editListener;
     private OnCommentDeleteListener deleteListener;
     private String currentUserId;
-    private boolean parentIsPrompt;
+    private static boolean parentIsPrompt;
 
     public CommentsAdapter() {
         this.currentUserId = SessionManager.getUserId();
@@ -119,7 +119,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
             if (contextTextView != null) {
                 contextTextView.setVisibility(View.VISIBLE);
-                contextTextView.setText(parentIsPrompt
+                contextTextView.setText(parentIsPrompt // set this to static to fix it
                         ? resources.getString(R.string.comment_context_prompt)
                         : resources.getString(R.string.comment_context_post));
             }
