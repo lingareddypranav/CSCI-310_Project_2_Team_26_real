@@ -154,18 +154,26 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <ImageButton
                 android:id="@+id/upvoteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Upvote" />
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/vote_up_content_description"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_up_outline_24dp"
+                android:tint="@color/primary_text" />
 
-            <com.google.android.material.button.MaterialButton
+            <ImageButton
                 android:id="@+id/downvoteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Downvote" />
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/vote_down_content_description"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_down_outline_24dp"
+                android:tint="@color/primary_text" />
         </LinearLayout>
 
         <TextView

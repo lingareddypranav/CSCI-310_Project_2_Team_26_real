@@ -84,6 +84,7 @@ public class DashboardFragment extends Fragment {
                 Toast.makeText(getContext(), messageId, Toast.LENGTH_SHORT).show();
             }
         });
+        postsAdapter.setOnPostVoteListener((post, type) -> postsViewModel.voteOnPost(post.getId(), type));
         binding.promptPostsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.promptPostsRecyclerView.setAdapter(postsAdapter);
 

@@ -82,7 +82,10 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
             subtitleBuilder.append(label).append(" • ").append(relative);
             if (!TextUtils.isEmpty(detail)) {
                 if (item.getType() == UserActivityItem.Type.COMMENT) {
-                    subtitleBuilder.append('\n').append(detail);
+                    String parentLabel = item.isPromptPost()
+                            ? itemView.getContext().getString(R.string.post_type_label_prompt)
+                            : itemView.getContext().getString(R.string.post_type_label_post);
+                    subtitleBuilder.append('\n').append(parentLabel).append(": ").append(detail);
                 } else {
                     subtitleBuilder.append(" • ").append(detail);
                 }
