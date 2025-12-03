@@ -48,7 +48,6 @@ public class CreatePostFragment extends Fragment {
         observeDraftSelection();
 
         // Ensure title field is visible when fragment is created
-        // Scroll to top to show the title field
         binding.getRoot().post(() -> {
             binding.getRoot().scrollTo(0, 0);
             if (binding.titleEditText != null) {
