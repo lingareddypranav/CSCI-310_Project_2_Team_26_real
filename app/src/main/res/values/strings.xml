@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">CSCI-310 Project 2 Team 26</string>
-    <string name="title_home">Home</string>
+    <string name="title_home">Posts</string>
     <string name="title_dashboard">Prompts</string>
     <string name="title_notifications">Activity</string>
     <string name="title_bookmarks">Bookmarks</string>
@@ -206,6 +206,13 @@
         <item quantity="one">%1$s downvote</item>
         <item quantity="other">%1$s downvotes</item>
     </plurals>
+
+    <string name="post_type_label_post">Post</string>
+    <string name="post_type_label_prompt">Prompt</string>
+    <string name="vote_up_content_description">Upvote</string>
+    <string name="vote_down_content_description">Downvote</string>
+    <string name="comment_context_post">Comment on post</string>
+    <string name="comment_context_prompt">Comment on prompt</string>
 
 
 </resources>

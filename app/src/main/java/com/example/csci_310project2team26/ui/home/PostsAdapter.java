@@ -39,10 +39,15 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         void onBookmarkToggle(Post post, boolean isBookmarked);
     }
 
+    public interface OnPostVoteListener {
+        void onVote(Post post, String type);
+    }
+
     private final List<Post> items = new ArrayList<>();
     private final OnPostClickListener clickListener;
     private OnPostDeletedListener deleteListener;
     private OnBookmarkToggleListener bookmarkToggleListener;
+    private OnPostVoteListener voteListener;
 
     public PostsAdapter(OnPostClickListener clickListener) {
         this.clickListener = clickListener;
@@ -54,6 +59,10 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
     public void setOnBookmarkToggleListener(OnBookmarkToggleListener listener) {
         this.bookmarkToggleListener = listener;
+    }
+
+    public void setOnPostVoteListener(OnPostVoteListener listener) {
+        this.voteListener = listener;
     }
 
     public void submitList(List<Post> newItems) {
@@ -75,7 +84,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         if (post == null) {
             return;
         }
-        holder.bind(post, clickListener, deleteListener, bookmarkToggleListener);
+        holder.bind(post, clickListener, deleteListener, bookmarkToggleListener, voteListener);
     }
 
     @Override
@@ -84,6 +93,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
     static class PostViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleTextView;
         private final TextView tagTextView;
+        private final TextView postTypeTextView;
         private final TextView authorTextView;
         private final TextView dateTextView;
         private final TextView contentTextView;
@@ -92,6 +102,8 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         private final TextView commentCountTextView;
         private final ImageButton deleteButton;
         private final ImageButton bookmarkButton;
+        private final ImageButton upvoteButton;
+        private final ImageButton downvoteButton;
         private final NumberFormat numberFormat;
         private final SimpleDateFormat dateFormat;
 
@@ -99,6 +111,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             super(itemView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             tagTextView = itemView.findViewById(R.id.tagTextView);
+            postTypeTextView = itemView.findViewById(R.id.postTypeTextView);
             authorTextView = itemView.findViewById(R.id.authorTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
             contentTextView = itemView.findViewById(R.id.contentTextView);
@@ -107,6 +120,8 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             commentCountTextView = itemView.findViewById(R.id.commentCountTextView);
             deleteButton = itemView.findViewById(R.id.deletePostButton);
             bookmarkButton = itemView.findViewById(R.id.bookmarkButton);
+            upvoteButton = itemView.findViewById(R.id.upvoteButton);
+            downvoteButton = itemView.findViewById(R.id.downvoteButton);
             numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
             dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
         }
@@ -114,7 +129,8 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         public void bind(Post post,
                         OnPostClickListener clickListener,
                         OnPostDeletedListener deleteListener,
-                        OnBookmarkToggleListener bookmarkToggleListener) {
+                        OnBookmarkToggleListener bookmarkToggleListener,
+                        OnPostVoteListener voteListener) {
             if (post == null) {
                 return;
             }
@@ -131,6 +147,11 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                     ? resources.getString(R.string.post_tag_format, post.getLlm_tag())
                     : resources.getString(R.string.post_tag_unknown);
             tagTextView.setText(tagLabel);
+            if (postTypeTextView != null) {
+                postTypeTextView.setText(post.isIs_prompt_post()
+                        ? resources.getString(R.string.post_type_label_prompt)
+                        : resources.getString(R.string.post_type_label_post));
+            }
             authorTextView.setText(resources.getString(R.string.post_author_format, author));
 
             // Format and display date
@@ -149,26 +170,32 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             int upvotes = Math.max(post.getUpvotes(), 0);
             int downvotes = Math.max(post.getDownvotes(), 0);
             int commentCount = Math.max(post.getComment_count(), 0);
-
-            String upvoteText = resources.getQuantityString(
-                    R.plurals.post_upvotes,
-                    upvotes,
-                    numberFormat.format(upvotes)
-            );
-            String downvoteText = resources.getQuantityString(
-                    R.plurals.post_downvotes,
-                    downvotes,
-                    numberFormat.format(downvotes)
-            );
             String commentsText = resources.getQuantityString(
                     R.plurals.post_comments,
                     commentCount,
                     numberFormat.format(commentCount)
             );
 
-            upvoteTextView.setText(upvoteText);
-            downvoteTextView.setText(downvoteText);
+            upvoteTextView.setText(numberFormat.format(upvotes));
+            downvoteTextView.setText(numberFormat.format(downvotes));
             commentCountTextView.setText(commentsText);
+
+            updateVoteIcons(post.getUser_vote_type());
+
+            if (upvoteButton != null) {
+                upvoteButton.setOnClickListener(v -> {
+                    if (voteListener != null) {
+                        voteListener.onVote(post, "up");
+                    }
+                });
+            }
+            if (downvoteButton != null) {
+                downvoteButton.setOnClickListener(v -> {
+                    if (voteListener != null) {
+                        voteListener.onVote(post, "down");
+                    }
+                });
+            }
 
             // Show delete button only for own posts
             String currentUserId = SessionManager.getUserId();
@@ -218,6 +245,23 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             bookmarkButton.setContentDescription(isBookmarked
                     ? itemView.getResources().getString(R.string.remove_bookmark)
                     : itemView.getResources().getString(R.string.add_bookmark));
+        }
+
+        private void updateVoteIcons(String userVoteType) {
+            boolean isUpvoted = "up".equalsIgnoreCase(userVoteType);
+            boolean isDownvoted = "down".equalsIgnoreCase(userVoteType);
+
+            if (upvoteButton != null) {
+                upvoteButton.setImageResource(isUpvoted
+                        ? R.drawable.ic_arrow_up_filled_24dp
+                        : R.drawable.ic_arrow_up_outline_24dp);
+            }
+
+            if (downvoteButton != null) {
+                downvoteButton.setImageResource(isDownvoted
+                        ? R.drawable.ic_arrow_down_filled_24dp
+                        : R.drawable.ic_arrow_down_outline_24dp);
+            }
         }
 
         private String formatDate(String dateString, Resources resources) {
