@@ -24,16 +24,39 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tagTextView"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textAllCaps="true"
-            android:textColor="@color/primary"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            tools:text="#GPT-4" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tagTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAllCaps="true"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="#GPT-4" />
+
+            <TextView
+                android:id="@+id/postTypeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_type_badge"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp"
+                android:textAllCaps="true"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="Prompt" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -120,24 +143,59 @@
             android:orientation="horizontal"
             android:weightSum="3">
 
-            <TextView
-                android:id="@+id/upvoteTextView"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textAppearance="?attr/textAppearanceCaption"
-                android:textColor="@color/primary_text"
-                tools:text="1.2k upvotes" />
+                android:gravity="start|center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/downvoteTextView"
+                <ImageButton
+                    android:id="@+id/upvoteButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/vote_up_content_description"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_arrow_up_outline_24dp"
+                    android:tint="@color/primary_text" />
+
+                <TextView
+                    android:id="@+id/upvoteTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/primary_text"
+                    tools:text="1.2k" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:textAppearance="?attr/textAppearanceCaption"
-                android:textColor="@color/primary_text"
-                tools:text="23 downvotes" />
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/downvoteButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/vote_down_content_description"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_arrow_down_outline_24dp"
+                    android:tint="@color/primary_text" />
+
+                <TextView
+                    android:id="@+id/downvoteTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/primary_text"
+                    tools:text="23" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/commentCountTextView"
