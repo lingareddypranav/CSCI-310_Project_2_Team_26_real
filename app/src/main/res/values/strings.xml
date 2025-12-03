@@ -122,6 +122,7 @@
     <string name="create_post_body_hint_optional_prompt">Content (optional for prompt posts)</string>
     <string name="create_post_tag_hint">Tag (e.g. GPT-4)</string>
     <string name="create_post_is_prompt">Is this a prompt post?</string>
+    <string name="create_post_is_anonymous">Post anonymously</string>
     <string name="create_post_submit">Publish</string>
     <string name="create_post_success">Post created!</string>
     <string name="create_post_error">Unable to create post</string>

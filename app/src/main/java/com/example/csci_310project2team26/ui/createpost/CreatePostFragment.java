@@ -32,6 +32,7 @@ public class CreatePostFragment extends Fragment {
         // Always start with prompt mode off to avoid leaking prior state when navigating back to
         // this screen.
         binding.promptSwitch.setChecked(false);
+        binding.anonymousSwitch.setChecked(false);
         if (binding.promptSectionLayout != null) {
             binding.promptSectionLayout.setVisibility(View.GONE);
         }
@@ -78,6 +79,7 @@ public class CreatePostFragment extends Fragment {
             binding.bodyEditText.setEnabled(!inFlight);
             binding.tagEditText.setEnabled(!inFlight);
             binding.promptSwitch.setEnabled(!inFlight);
+            binding.anonymousSwitch.setEnabled(!inFlight);
             if (binding.promptSectionEditText != null) {
                 binding.promptSectionEditText.setEnabled(!inFlight);
             }
@@ -100,6 +102,7 @@ public class CreatePostFragment extends Fragment {
         String body = binding.bodyEditText.getText() != null ? binding.bodyEditText.getText().toString() : "";
         String tag = binding.tagEditText.getText() != null ? binding.tagEditText.getText().toString() : "";
         boolean isPrompt = binding.promptSwitch.isChecked();
+        boolean isAnonymous = binding.anonymousSwitch.isChecked();
         
         String promptSection = null;
         String descriptionSection = null;
@@ -110,7 +113,7 @@ public class CreatePostFragment extends Fragment {
                 binding.descriptionSectionEditText.getText().toString() : "";
         }
 
-        viewModel.createPost(title, body, tag, isPrompt, promptSection, descriptionSection);
+        viewModel.createPost(title, body, tag, isPrompt, promptSection, descriptionSection, isAnonymous);
     }
 
     private void handlePostCreated(Post post) {
@@ -130,6 +133,7 @@ public class CreatePostFragment extends Fragment {
         binding.bodyEditText.setText("");
         binding.tagEditText.setText("");
         binding.promptSwitch.setChecked(false);
+        binding.anonymousSwitch.setChecked(false);
         
         // Clear and hide prompt/description fields
         if (binding.promptSectionEditText != null) {

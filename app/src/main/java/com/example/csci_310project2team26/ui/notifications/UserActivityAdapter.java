@@ -59,9 +59,14 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
 
         void bind(UserActivityItem item, OnActivityClickListener listener) {
             titleTextView.setText(item.getTitle());
-            int iconRes = item.getType() == UserActivityItem.Type.POST
-                    ? R.drawable.ic_home_black_24dp
-                    : R.drawable.ic_notifications_black_24dp;
+            int iconRes;
+            if (item.getType() == UserActivityItem.Type.POST) {
+                iconRes = item.isPromptPost()
+                        ? R.drawable.ic_dashboard_black_24dp
+                        : R.drawable.ic_home_black_24dp;
+            } else {
+                iconRes = R.drawable.ic_notifications_black_24dp;
+            }
             typeIconImageView.setImageResource(iconRes);
 
             String label = item.getType() == UserActivityItem.Type.POST
@@ -119,7 +124,8 @@ public class UserActivityAdapter extends ListAdapter<UserActivityItem, UserActiv
             return oldItem.getTimestamp() == newItem.getTimestamp()
                     && oldTitle.equals(newTitle)
                     && oldSubtitle.equals(newSubtitle)
-                    && oldItem.getType() == newItem.getType();
+                    && oldItem.getType() == newItem.getType()
+                    && oldItem.isPromptPost() == newItem.isPromptPost();
         }
     };
 }

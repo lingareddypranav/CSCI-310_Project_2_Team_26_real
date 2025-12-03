@@ -27,7 +27,7 @@ public class CreatePostViewModel extends ViewModel {
     }
 
     public void createPost(String title, String content, String tag, boolean isPrompt,
-                           String promptSection, String descriptionSection) {
+                           String promptSection, String descriptionSection, boolean anonymous) {
         String trimmedTitle = title != null ? title.trim() : "";
         String trimmedTag = tag != null ? tag.trim() : "";
         String trimmedContent = content != null ? content.trim() : "";
@@ -77,6 +77,7 @@ public class CreatePostViewModel extends ViewModel {
                 normalizedIsPrompt,
                 normalizedIsPrompt ? trimmedPrompt : null,
                 normalizedIsPrompt ? trimmedDescription : null,
+                anonymous,
                 new PostRepository.Callback<Post>() {
                     @Override
                     public void onSuccess(Post result) {
