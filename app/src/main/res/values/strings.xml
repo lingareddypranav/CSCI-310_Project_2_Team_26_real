@@ -158,6 +158,8 @@
     <string name="draft_meta_post">Post</string>
     <string name="draft_use_button">Use draft</string>
     <string name="draft_delete_button">Delete</string>
+    <string name="draft_prompt_label">Prompt:</string>
+    <string name="draft_description_label">Description:</string>
     
     <!-- Search -->
     <string name="search_title">Search Posts</string>

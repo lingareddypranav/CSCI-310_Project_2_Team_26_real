@@ -51,12 +51,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/useDraftButton"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:text="@string/draft_use_button"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"/>
 
             <com.google.android.material.button.MaterialButton
