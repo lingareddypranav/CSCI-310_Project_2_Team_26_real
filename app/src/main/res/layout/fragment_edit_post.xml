@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:paddingTop="8dp"
         android:paddingBottom="32dp">
 
         <com.google.android.material.textfield.TextInputLayout
