@@ -34,6 +34,7 @@ public class EditPostFragment extends Fragment {
             postId = getArguments().getString("postId");
         }
 
+        binding.editAnonymousSwitch.setChecked(false);
         binding.savePostButton.setOnClickListener(v -> onSaveClicked());
 
         // Show/hide prompt fields based on toggle
@@ -72,7 +73,8 @@ public class EditPostFragment extends Fragment {
             binding.editTitleEditText.setEnabled(!inFlight);
             binding.editBodyEditText.setEnabled(!inFlight);
             binding.editTagEditText.setEnabled(!inFlight);
-            binding.editPromptSwitch.setEnabled(!inFlight);
+            binding.editPromptSwitch.setEnabled(false);
+            binding.editAnonymousSwitch.setEnabled(!inFlight);
             if (binding.editPromptSectionEditText != null) {
                 binding.editPromptSectionEditText.setEnabled(!inFlight);
             }
@@ -91,8 +93,10 @@ public class EditPostFragment extends Fragment {
         binding.editTagEditText.setText(post.getLlm_tag() != null ? post.getLlm_tag() : "");
         boolean isPrompt = post.isIs_prompt_post();
         binding.editPromptSwitch.setChecked(isPrompt);
-        binding.editPromptSwitch.setEnabled(!isPrompt);
+        binding.editPromptSwitch.setEnabled(false);
         togglePromptFields(isPrompt);
+
+        binding.editAnonymousSwitch.setChecked(post.isAnonymous());
 
         // Populate prompt sections if they exist
         if (isPrompt) {
@@ -145,7 +149,7 @@ public class EditPostFragment extends Fragment {
             }
         }
         
-        viewModel.updatePost(postId, title, body, tag, isPrompt, promptSection, descriptionSection);
+        viewModel.updatePost(postId, title, body, tag, isPrompt, promptSection, descriptionSection, binding.editAnonymousSwitch.isChecked());
     }
 
     private void togglePromptFields(boolean isPrompt) {

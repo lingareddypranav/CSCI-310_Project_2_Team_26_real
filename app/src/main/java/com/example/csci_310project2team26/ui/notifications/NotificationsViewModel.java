@@ -174,7 +174,8 @@ public class NotificationsViewModel extends ViewModel {
                         post.getId(),
                         title,
                         detail,
-                        created > 0 ? created : now
+                        created > 0 ? created : now,
+                        post.isIs_prompt_post()
                 ));
             }
         }
@@ -198,7 +199,8 @@ public class NotificationsViewModel extends ViewModel {
                         comment.getPost_id(),
                         title,
                         detail,
-                        updated > 0 ? updated : now
+                        updated > 0 ? updated : now,
+                        false
                 ));
             }
         }
@@ -287,7 +289,8 @@ public class NotificationsViewModel extends ViewModel {
                         item.getPostId(),
                         item.getTitle(),
                         String.format(Locale.getDefault(), "Post: %s", title),
-                        item.getTimestamp()
+                        item.getTimestamp(),
+                        item.isPromptPost()
                 ));
             } else {
                 updated.add(item);

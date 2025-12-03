@@ -135,7 +135,8 @@ public interface ApiService {
         @Field("llm_tag") String llmTag,
         @Field("is_prompt_post") boolean isPromptPost,
         @Field("prompt_section") String promptSection,
-        @Field("description_section") String descriptionSection
+        @Field("description_section") String descriptionSection,
+        @Field("anonymous") boolean anonymous
     );
 
     @PUT("api/posts/{id}")
@@ -148,7 +149,8 @@ public interface ApiService {
         @Field("llm_tag") String llmTag,
         @Field("is_prompt_post") Boolean isPromptPost,
         @Field("prompt_section") String promptSection,
-        @Field("description_section") String descriptionSection
+        @Field("description_section") String descriptionSection,
+        @Field("anonymous") Boolean anonymous
     );
 
     @DELETE("api/posts/{id}")
