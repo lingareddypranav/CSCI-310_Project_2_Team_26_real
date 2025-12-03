@@ -274,7 +274,7 @@ public class PostDetailFragment extends Fragment {
             binding.dateTextView.setText(dateText);
         }
 
-        // Show delete button only for own posts
+        // Show delete and version history buttons only for own posts
         String currentUserId = SessionManager.getUserId();
         boolean isOwnPost = currentUserId != null && post.getAuthor_id() != null 
                 && currentUserId.equals(post.getAuthor_id());
@@ -285,6 +285,21 @@ public class PostDetailFragment extends Fragment {
                 binding.deletePostButton.setOnClickListener(v -> deletePost());
             } else {
                 binding.deletePostButton.setVisibility(View.GONE);
+            }
+        }
+
+        if (binding.versionHistoryButton != null) {
+            if (isOwnPost) {
+                binding.versionHistoryButton.setVisibility(View.VISIBLE);
+                binding.versionHistoryButton.setOnClickListener(v -> {
+                    if (postId != null && !postId.isEmpty()) {
+                        Bundle args = new Bundle();
+                        args.putString("postId", postId);
+                        Navigation.findNavController(binding.getRoot()).navigate(R.id.postVersionsFragment, args);
+                    }
+                });
+            } else {
+                binding.versionHistoryButton.setVisibility(View.GONE);
             }
         }
 
