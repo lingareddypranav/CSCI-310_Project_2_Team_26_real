@@ -119,7 +119,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
             if (contextTextView != null) {
                 contextTextView.setVisibility(View.VISIBLE);
-                contextTextView.setText(parentIsPrompt // set this to static to fix it
+                contextTextView.setText(parentIsPrompt // set this to static to fix it?
                         ? resources.getString(R.string.comment_context_prompt)
                         : resources.getString(R.string.comment_context_post));
             }
