@@ -49,34 +49,51 @@ const getPostVersions = async (req, res) => {
       [postId]
     );
 
-    // Get the max version number to determine current version number
+    // Get the max version number
     const maxVersion = savedVersions.rows.length > 0 
       ? Math.max(...savedVersions.rows.map(v => v.version_number))
       : 0;
-    
-    const currentVersionNumber = maxVersion + 1;
 
     // Combine versions: current state first (as latest), then saved versions
     const allVersions = [];
     
-    // Add current post state as the latest version (if post exists)
-    if (currentPost.rows.length > 0) {
+    // Only add current post state as a separate version if:
+    // 1. There are saved versions (meaning edits have been made)
+    // 2. AND the current state is different from the latest saved version
+    if (currentPost.rows.length > 0 && savedVersions.rows.length > 0) {
       const current = currentPost.rows[0];
-      allVersions.push({
-        id: current.id, // Use post ID as version ID for current state
-        post_id: current.post_id,
-        version_number: currentVersionNumber,
-        title: current.title,
-        content: current.content,
-        prompt_section: current.prompt_section,
-        description_section: current.description_section,
-        llm_tag: current.llm_tag,
-        is_prompt_post: current.is_prompt_post,
-        anonymous: current.anonymous,
-        created_at: current.created_at,
-        created_by: current.created_by,
-        is_current: true // Flag to indicate this is the current version
-      });
+      const latestSaved = savedVersions.rows[0]; // Already sorted DESC, so first is latest
+      
+      // Compare current state with latest saved version
+      // Check if any field has changed
+      const hasChanged = 
+        current.title !== latestSaved.title ||
+        current.content !== latestSaved.content ||
+        current.prompt_section !== latestSaved.prompt_section ||
+        current.description_section !== latestSaved.description_section ||
+        current.llm_tag !== latestSaved.llm_tag ||
+        current.is_prompt_post !== latestSaved.is_prompt_post ||
+        current.anonymous !== latestSaved.anonymous;
+      
+      // Only add current as separate version if it's different from latest saved version
+      if (hasChanged) {
+        const currentVersionNumber = maxVersion + 1;
+        allVersions.push({
+          id: current.id, // Use post ID as version ID for current state
+          post_id: current.post_id,
+          version_number: currentVersionNumber,
+          title: current.title,
+          content: current.content,
+          prompt_section: current.prompt_section,
+          description_section: current.description_section,
+          llm_tag: current.llm_tag,
+          is_prompt_post: current.is_prompt_post,
+          anonymous: current.anonymous,
+          created_at: current.created_at,
+          created_by: current.created_by,
+          is_current: true // Flag to indicate this is the current version
+        });
+      }
     }
     
     // Add all saved versions
