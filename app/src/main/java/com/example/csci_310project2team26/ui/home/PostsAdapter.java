@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
-import com.example.csci_310project2team26.data.repository.PostRepository;
 import com.example.csci_310project2team26.data.repository.SessionManager;
+import com.example.csci_310project2team26.data.repository.BookmarkManager;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,9 +35,14 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         void onPostDeleted(String postId);
     }
 
+    public interface OnBookmarkToggleListener {
+        void onBookmarkToggle(Post post, boolean isBookmarked);
+    }
+
     private final List<Post> items = new ArrayList<>();
     private final OnPostClickListener clickListener;
     private OnPostDeletedListener deleteListener;
+    private OnBookmarkToggleListener bookmarkToggleListener;
 
     public PostsAdapter(OnPostClickListener clickListener) {
         this.clickListener = clickListener;
@@ -45,6 +50,10 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
     public void setOnPostDeletedListener(OnPostDeletedListener listener) {
         this.deleteListener = listener;
+    }
+
+    public void setOnBookmarkToggleListener(OnBookmarkToggleListener listener) {
+        this.bookmarkToggleListener = listener;
     }
 
     public void submitList(List<Post> newItems) {
@@ -66,7 +75,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         if (post == null) {
             return;
         }
-        holder.bind(post, clickListener, deleteListener);
+        holder.bind(post, clickListener, deleteListener, bookmarkToggleListener);
     }
 
     @Override
@@ -82,6 +91,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         private final TextView downvoteTextView;
         private final TextView commentCountTextView;
         private final ImageButton deleteButton;
+        private final ImageButton bookmarkButton;
         private final NumberFormat numberFormat;
         private final SimpleDateFormat dateFormat;
 
@@ -96,11 +106,15 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             downvoteTextView = itemView.findViewById(R.id.downvoteTextView);
             commentCountTextView = itemView.findViewById(R.id.commentCountTextView);
             deleteButton = itemView.findViewById(R.id.deletePostButton);
+            bookmarkButton = itemView.findViewById(R.id.bookmarkButton);
             numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
             dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
         }
 
-        public void bind(Post post, OnPostClickListener clickListener, OnPostDeletedListener deleteListener) {
+        public void bind(Post post,
+                        OnPostClickListener clickListener,
+                        OnPostDeletedListener deleteListener,
+                        OnBookmarkToggleListener bookmarkToggleListener) {
             if (post == null) {
                 return;
             }
@@ -176,12 +190,34 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                 }
             }
 
+            if (bookmarkButton != null) {
+                boolean isBookmarked = BookmarkManager.isBookmarked(post);
+                updateBookmarkIcon(isBookmarked);
+                bookmarkButton.setOnClickListener(v -> {
+                    boolean newState = BookmarkManager.toggleBookmark(post);
+                    updateBookmarkIcon(newState);
+                    if (bookmarkToggleListener != null) {
+                        bookmarkToggleListener.onBookmarkToggle(post, newState);
+                    }
+                });
+            }
+
             // Set click listener for post
             itemView.setOnClickListener(v -> {
                 if (clickListener != null && post.getId() != null && !post.getId().isEmpty()) {
                     clickListener.onPostClick(post);
                 }
             });
+        }
+
+        private void updateBookmarkIcon(boolean isBookmarked) {
+            if (bookmarkButton == null) return;
+            bookmarkButton.setImageResource(isBookmarked
+                    ? R.drawable.ic_bookmark_filled_24dp
+                    : R.drawable.ic_bookmark_border_24dp);
+            bookmarkButton.setContentDescription(isBookmarked
+                    ? itemView.getResources().getString(R.string.remove_bookmark)
+                    : itemView.getResources().getString(R.string.add_bookmark));
         }
 
         private String formatDate(String dateString, Resources resources) {

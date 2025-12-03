@@ -3,6 +3,7 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Prompts</string>
     <string name="title_notifications">Activity</string>
+    <string name="title_bookmarks">Bookmarks</string>
 
     <!-- NEW STRINGS FOR AUTHENTICATION AND PROFILE - ADD THESE BELOW -->
 
@@ -139,6 +140,12 @@
     <string name="user_activity_post_label">Post</string>
     <string name="user_activity_comment_label">Comment</string>
     <string name="title_create_post_nav">Create</string>
+    <string name="bookmarks_empty_state">You haven’t bookmarked any posts yet.</string>
+    <string name="bookmarks_filter_label">Show</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="bookmark_added">Saved to bookmarks</string>
+    <string name="bookmark_removed">Removed from bookmarks</string>
     
     <!-- Search -->
     <string name="search_title">Search Posts</string>
