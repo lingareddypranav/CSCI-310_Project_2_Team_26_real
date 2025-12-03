@@ -429,6 +429,24 @@ const createPost = async (req, res) => {
 
     const postId = insertResult.rows[0].id;
 
+    // Save the initial post as version 1
+    await query(
+      `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous, created_by)
+       VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        postId,
+        title,
+        normalizedContent || null,
+        prompt_section || null,
+        description_section || null,
+        llm_tag,
+        isPromptPost || false,
+        isAnonymous || false,
+        authorId
+      ]
+    );
+    console.log(`Saved initial version 1 for post ${postId}`);
+
     // Fetch full post data with author_name, vote counts, and comment count
     const result = await query(
       `SELECT
@@ -519,8 +537,8 @@ const updatePost = async (req, res) => {
 
       // Insert version
       await query(
-        `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           id,
           nextVersion,
@@ -530,7 +548,8 @@ const updatePost = async (req, res) => {
           oldPost.description_section,
           oldPost.llm_tag,
           oldPost.is_prompt_post,
-          oldPost.anonymous
+          oldPost.anonymous,
+          userId
         ]
       );
       console.log(`Saved version ${nextVersion} for post ${id}`);
