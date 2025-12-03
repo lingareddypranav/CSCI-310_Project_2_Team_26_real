@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.repository.SessionManager;
+import com.example.csci_310project2team26.data.repository.VotePreferenceManager;
 import com.example.csci_310project2team26.data.repository.BookmarkManager;
 
 import java.text.ParseException;
@@ -206,6 +207,11 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
                 }
             }
 
+            String persistedVote = VotePreferenceManager.getPostVote(itemView.getContext(), post.getId());
+            if (persistedVote != null && (post.getUser_vote_type() == null || post.getUser_vote_type().isEmpty())) {
+                post.setUser_vote_type(persistedVote);
+            }
+
             int upvotes = Math.max(post.getUpvotes(), 0);
             int downvotes = Math.max(post.getDownvotes(), 0);
             int commentCount = Math.max(post.getComment_count(), 0);
@@ -318,6 +324,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
 
             post.setUser_vote_type(newVote);
+            VotePreferenceManager.setPostVote(itemView.getContext(), post.getId(), newVote);
             updateVoteIcons(newVote);
         }
 

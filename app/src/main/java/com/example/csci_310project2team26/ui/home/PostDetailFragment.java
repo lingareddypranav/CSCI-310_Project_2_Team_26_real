@@ -21,6 +21,7 @@ import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.repository.PostRepository;
 import com.example.csci_310project2team26.data.repository.SessionManager;
+import com.example.csci_310project2team26.data.repository.VotePreferenceManager;
 import com.example.csci_310project2team26.databinding.FragmentPostDetailBinding;
 import com.example.csci_310project2team26.viewmodel.CommentsViewModel;
 import com.example.csci_310project2team26.viewmodel.PostDetailViewModel;
@@ -274,6 +275,11 @@ public class PostDetailFragment extends Fragment {
             }
         }
 
+        String persistedVote = VotePreferenceManager.getPostVote(getContext(), post.getId());
+        if (persistedVote != null && (post.getUser_vote_type() == null || post.getUser_vote_type().isEmpty())) {
+            post.setUser_vote_type(persistedVote);
+        }
+
         NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.getDefault());
         int upvotes = Math.max(post.getUpvotes(), 0);
         int downvotes = Math.max(post.getDownvotes(), 0);
@@ -332,6 +338,7 @@ public class PostDetailFragment extends Fragment {
         }
 
         currentPost.setUser_vote_type(newVote);
+        VotePreferenceManager.setPostVote(getContext(), currentPost.getId(), newVote);
         updateVoteButtons(newVote);
     }
 
