@@ -56,24 +56,6 @@ public class MainActivity extends AppCompatActivity {
             showSearchActions = destId == R.id.navigation_home || destId == R.id.navigation_dashboard;
             invalidateOptionsMenu();
         });
-
-        // Apply window insets to FragmentContainerView to account for ActionBar
-        View fragmentContainer = findViewById(R.id.nav_host_fragment_activity_main);
-        if (fragmentContainer != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(fragmentContainer, (v, insets) -> {
-                int statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                // Get ActionBar height from theme attribute
-                android.util.TypedValue tv = new android.util.TypedValue();
-                int actionBarHeight = 0;
-                if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-                    actionBarHeight = android.util.TypedValue.complexToDimensionPixelSize(
-                            tv.data, getResources().getDisplayMetrics());
-                }
-                // Set padding to account for both status bar and action bar
-                v.setPadding(0, statusBarInset + actionBarHeight, 0, 0);
-                return insets;
-            });
-        }
     }
 
     @Override
