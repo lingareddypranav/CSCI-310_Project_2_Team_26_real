@@ -150,9 +150,9 @@
                 android:contentDescription="@string/add_bookmark"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="8dp"
-                android:tint="@color/primary_text"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                app:tint="@color/primary_text" />
 
             <ImageButton
                 android:id="@+id/deletePostButton"
@@ -191,7 +191,7 @@
                     android:contentDescription="@string/vote_up_content_description"
                     android:padding="6dp"
                     android:src="@drawable/ic_arrow_up_outline_24dp"
-                    android:tint="@color/primary_text" />
+                    app:tint="@color/primary_text" />
 
                 <TextView
                     android:id="@+id/upvoteTextView"
@@ -218,7 +218,7 @@
                     android:contentDescription="@string/vote_down_content_description"
                     android:padding="6dp"
                     android:src="@drawable/ic_arrow_down_outline_24dp"
-                    android:tint="@color/primary_text" />
+                    app:tint="@color/primary_text" />
 
                 <TextView
                     android:id="@+id/downvoteTextView"
