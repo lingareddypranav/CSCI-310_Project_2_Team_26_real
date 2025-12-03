@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS posts (
     author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(500) NOT NULL,
     content TEXT NOT NULL,
+    anonymous BOOLEAN DEFAULT FALSE,
     prompt_section TEXT,
     description_section TEXT,
     llm_tag VARCHAR(100) NOT NULL,
