@@ -525,54 +525,80 @@ const updatePost = async (req, res) => {
       });
     }
 
-    // Save the current state as a version before updating (if not first edit)
-    // On first edit, the old state is already Version 1, so we don't save it
-    // On subsequent edits, we save the current state (which will become the previous version)
-    const versionCountResult = await query(
-      `SELECT COUNT(*) as count FROM post_versions WHERE post_id = $1`,
+    // Save the current state as a version before updating (only if NOT first edit)
+    // First edit: old state is already Version 1, so we don't save anything
+    // Second edit: save current state (Version 2) as Version 2, then update to Version 3
+    // Third edit: save current state (Version 3) as Version 3, then update to Version 4
+    
+    // Get current state (before update) and Version 1 to compare
+    const currentPost = await query(
+      `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
+       FROM posts WHERE id = $1`,
       [id]
     );
-    const versionCount = parseInt(versionCountResult.rows[0]?.count || 0);
+    
+    const version1Result = await query(
+      `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
+       FROM post_versions WHERE post_id = $1 AND version_number = 1`,
+      [id]
+    );
+
+    // Check if current state (before update) matches Version 1
+    // If it matches, this is the first edit - don't save (old state is already Version 1)
+    // If it doesn't match, we've had edits - save current state before updating
+    let isFirstEdit = false;
+    if (currentPost.rows.length > 0 && version1Result.rows.length > 0) {
+      const current = currentPost.rows[0];
+      const v1 = version1Result.rows[0];
+      const normalize = (val) => {
+        if (val === null || val === undefined) return null;
+        if (typeof val === 'string') return val.trim();
+        return val;
+      };
+      
+      isFirstEdit = 
+        normalize(current.title) === normalize(v1.title) &&
+        normalize(current.content) === normalize(v1.content) &&
+        normalize(current.prompt_section) === normalize(v1.prompt_section) &&
+        normalize(current.description_section) === normalize(v1.description_section) &&
+        normalize(current.llm_tag) === normalize(v1.llm_tag) &&
+        current.is_prompt_post === v1.is_prompt_post &&
+        current.anonymous === v1.anonymous;
+      
+      console.log(`Post ${id} edit check: isFirstEdit=${isFirstEdit}, current content="${current.content}", v1 content="${v1.content}"`);
+    } else if (version1Result.rows.length === 0) {
+      console.log(`Post ${id} has no Version 1 - this shouldn't happen`);
+    }
 
     // Only save current state if this is NOT the first edit
-    // First edit: old state is Version 1 (already saved), new state will be Version 2 (shown but not saved yet)
-    // Second edit: current state (Version 2) gets saved as Version 2, new state becomes Version 3
-    if (versionCount > 0) {
-      const currentPost = await query(
-        `SELECT title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous
-         FROM posts WHERE id = $1`,
+    if (!isFirstEdit && currentPost.rows.length > 0) {
+      const currentState = currentPost.rows[0];
+      // Get the next version number
+      const versionResult = await query(
+        `SELECT COALESCE(MAX(version_number), 0) + 1 as next_version
+         FROM post_versions WHERE post_id = $1`,
         [id]
       );
+      const versionToSave = versionResult.rows[0]?.next_version || 1;
 
-      if (currentPost.rows.length > 0) {
-        const currentState = currentPost.rows[0];
-        // Get the next version number (this will be the version number for the current state)
-        const versionResult = await query(
-          `SELECT COALESCE(MAX(version_number), 0) + 1 as next_version
-           FROM post_versions WHERE post_id = $1`,
-          [id]
-        );
-        const versionToSave = versionResult.rows[0]?.next_version || 1;
-
-        // Save current state as a version (this becomes the previous version after update)
-        await query(
-          `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous, created_by)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-          [
-            id,
-            versionToSave,
-            currentState.title,
-            currentState.content,
-            currentState.prompt_section,
-            currentState.description_section,
-            currentState.llm_tag,
-            currentState.is_prompt_post,
-            currentState.anonymous,
-            userId
-          ]
-        );
-        console.log(`Saved version ${versionToSave} for post ${id} (current state before edit)`);
-      }
+      // Save current state as a version (this becomes the previous version after update)
+      await query(
+        `INSERT INTO post_versions (post_id, version_number, title, content, prompt_section, description_section, llm_tag, is_prompt_post, anonymous, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          id,
+          versionToSave,
+          currentState.title,
+          currentState.content,
+          currentState.prompt_section,
+          currentState.description_section,
+          currentState.llm_tag,
+          currentState.is_prompt_post,
+          currentState.anonymous,
+          userId
+        ]
+      );
+      console.log(`Saved version ${versionToSave} for post ${id} (current state before edit)`);
     } else {
       console.log(`First edit for post ${id} - skipping version save (old state is already Version 1)`);
     }
