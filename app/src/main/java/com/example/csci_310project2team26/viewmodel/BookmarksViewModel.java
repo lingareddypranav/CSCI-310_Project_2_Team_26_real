@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.repository.BookmarkManager;
+import com.example.csci_310project2team26.data.repository.PostRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ public class BookmarksViewModel extends ViewModel {
     public static final String FILTER_PROMPT = "prompt";
 
     private final MutableLiveData<List<Post>> bookmarks = new MutableLiveData<>(new ArrayList<>());
+    private final PostRepository postRepository = new PostRepository();
     private String currentFilter = FILTER_ALL;
 
     public LiveData<List<Post>> getBookmarks() {
@@ -40,5 +42,23 @@ public class BookmarksViewModel extends ViewModel {
 
     public void onBookmarkToggled() {
         refreshBookmarks();
+    }
+
+    public void voteOnPost(String postId, String type) {
+        if (postId == null || type == null) {
+            return;
+        }
+
+        postRepository.votePost(postId, type, new PostRepository.Callback<PostRepository.VoteActionResult>() {
+            @Override
+            public void onSuccess(PostRepository.VoteActionResult result) {
+                refreshBookmarks();
+            }
+
+            @Override
+            public void onError(String error) {
+                // Silent fail; bookmarks view does not expose errors yet
+            }
+        });
     }
 }
