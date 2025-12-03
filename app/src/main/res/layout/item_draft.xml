@@ -40,5 +40,31 @@
             android:ellipsize="end"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             tools:text="This is where we show a snippet of the draft body, prompt text, or description." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="end"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/useDraftButton"
+                style="@style/Widget.Material3.Button.FilledTonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/draft_use_button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteDraftButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/draft_delete_button" />
+        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

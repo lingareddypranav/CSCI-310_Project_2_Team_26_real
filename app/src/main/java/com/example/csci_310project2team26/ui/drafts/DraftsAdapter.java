@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci_310project2team26.R;
 import com.example.csci_310project2team26.data.model.Draft;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,11 @@ import java.util.List;
 public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewHolder> {
 
     private final List<Draft> drafts = new ArrayList<>();
+    private final DraftActionListener actionListener;
+
+    public DraftsAdapter(DraftActionListener actionListener) {
+        this.actionListener = actionListener;
+    }
 
     @NonNull
     @Override
@@ -30,7 +36,7 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
     @Override
     public void onBindViewHolder(@NonNull DraftViewHolder holder, int position) {
         Draft draft = drafts.get(position);
-        holder.bind(draft);
+        holder.bind(draft, actionListener);
     }
 
     @Override
@@ -50,15 +56,19 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
         private final TextView title;
         private final TextView meta;
         private final TextView preview;
+        private final MaterialButton useDraftButton;
+        private final MaterialButton deleteDraftButton;
 
         DraftViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.draftTitle);
             meta = itemView.findViewById(R.id.draftMeta);
             preview = itemView.findViewById(R.id.draftPreview);
+            useDraftButton = itemView.findViewById(R.id.useDraftButton);
+            deleteDraftButton = itemView.findViewById(R.id.deleteDraftButton);
         }
 
-        void bind(Draft draft) {
+        void bind(Draft draft, DraftActionListener actionListener) {
             title.setText(draft.getTitle());
 
             StringBuilder metaBuilder = new StringBuilder();
@@ -84,6 +94,15 @@ public class DraftsAdapter extends RecyclerView.Adapter<DraftsAdapter.DraftViewH
                 previewText = draft.getBody();
             }
             preview.setText(previewText);
+
+            useDraftButton.setOnClickListener(v -> actionListener.onUseDraft(draft));
+            deleteDraftButton.setOnClickListener(v -> actionListener.onDeleteDraft(draft));
         }
+    }
+
+    public interface DraftActionListener {
+        void onUseDraft(Draft draft);
+
+        void onDeleteDraft(Draft draft);
     }
 }

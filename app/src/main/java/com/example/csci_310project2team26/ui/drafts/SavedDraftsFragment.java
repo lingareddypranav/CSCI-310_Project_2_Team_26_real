@@ -10,7 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.csci_310project2team26.data.model.Draft;
 import com.example.csci_310project2team26.databinding.FragmentSavedDraftsBinding;
 import com.example.csci_310project2team26.viewmodel.DraftsViewModel;
 
@@ -25,7 +27,18 @@ public class SavedDraftsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentSavedDraftsBinding.inflate(inflater, container, false);
         draftsViewModel = new ViewModelProvider(requireActivity()).get(DraftsViewModel.class);
-        adapter = new DraftsAdapter();
+        adapter = new DraftsAdapter(new DraftsAdapter.DraftActionListener() {
+            @Override
+            public void onUseDraft(@NonNull Draft draft) {
+                draftsViewModel.selectDraft(draft);
+                NavHostFragment.findNavController(SavedDraftsFragment.this).navigateUp();
+            }
+
+            @Override
+            public void onDeleteDraft(@NonNull Draft draft) {
+                draftsViewModel.deleteDraft(draft.getId());
+            }
+        });
 
         binding.draftsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.draftsRecyclerView.setAdapter(adapter);

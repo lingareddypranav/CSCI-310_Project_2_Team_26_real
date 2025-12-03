@@ -156,6 +156,8 @@
     <string name="saved_drafts_empty">You haven’t saved any drafts yet.</string>
     <string name="draft_meta_prompt">Prompt</string>
     <string name="draft_meta_post">Post</string>
+    <string name="draft_use_button">Use draft</string>
+    <string name="draft_delete_button">Delete</string>
     
     <!-- Search -->
     <string name="search_title">Search Posts</string>
