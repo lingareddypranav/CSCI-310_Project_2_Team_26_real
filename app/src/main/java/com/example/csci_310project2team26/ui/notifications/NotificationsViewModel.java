@@ -194,7 +194,9 @@ public class NotificationsViewModel extends ViewModel {
                 String postTitle = lookupPostTitle(comment.getPost_id());
                 boolean isPromptPost = isPromptPost(comment.getPost_id());
                 String detail = !TextUtils.isEmpty(comment.getPost_id())
-                        ? (!TextUtils.isEmpty(postTitle) ? postTitle : comment.getPost_id())
+                        ? String.format(Locale.getDefault(), "%s: %s",
+                        isPromptPost ? "Prompt" : "Post",
+                        postTitle)
                         : "";
                 items.add(new UserActivityItem(
                         UserActivityItem.Type.COMMENT,
@@ -300,7 +302,7 @@ public class NotificationsViewModel extends ViewModel {
                         item.getId(),
                         item.getPostId(),
                         item.getTitle(),
-                        title,
+                        String.format(Locale.getDefault(), "%s: %s", isPromptPost ? "Prompt" : "Post", title),
                         item.getTimestamp(),
                         isPromptPost
                 ));
