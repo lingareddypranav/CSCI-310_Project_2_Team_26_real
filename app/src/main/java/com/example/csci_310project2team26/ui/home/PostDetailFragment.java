@@ -44,6 +44,7 @@ public class PostDetailFragment extends Fragment {
     private String postId;
     private int displayedCommentCount = 0;
     private Post currentPost;
+    private long sessionVersionAtLoad = SessionManager.getSessionVersion();
 
     @Nullable
     @Override
@@ -105,6 +106,7 @@ public class PostDetailFragment extends Fragment {
             return;
         }
 
+        sessionVersionAtLoad = SessionManager.getSessionVersion();
         postDetailViewModel.loadPost(postId);
         commentsViewModel.loadComments(postId);
 
@@ -114,6 +116,17 @@ public class PostDetailFragment extends Fragment {
         binding.addCommentButton.setOnClickListener(v -> addComment());
 
         observeViewModel();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        long latestSession = SessionManager.getSessionVersion();
+        if (postId != null && latestSession != sessionVersionAtLoad) {
+            sessionVersionAtLoad = latestSession;
+            postDetailViewModel.loadPost(postId);
+            commentsViewModel.loadComments(postId);
+        }
     }
 
     private void observeViewModel() {

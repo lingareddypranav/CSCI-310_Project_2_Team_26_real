@@ -31,10 +31,12 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
     private OnCommentEditListener editListener;
     private OnCommentDeleteListener deleteListener;
     private String currentUserId;
+    private long sessionVersion;
     private boolean parentIsPrompt;
 
     public CommentsAdapter() {
         this.currentUserId = SessionManager.getUserId();
+        this.sessionVersion = SessionManager.getSessionVersion();
     }
 
     public void submitList(List<Comment> newItems) {
@@ -69,11 +71,26 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
+        long latestSession = SessionManager.getSessionVersion();
+        if (latestSession != sessionVersion) {
+            sessionVersion = latestSession;
+            currentUserId = SessionManager.getUserId();
+            clearLocalVoteSelections();
+        }
         holder.bind(items.get(position), voteListener, editListener, deleteListener, currentUserId);
     }
 
     @Override
     public int getItemCount() { return items.size(); }
+
+    private void clearLocalVoteSelections() {
+        for (Comment comment : items) {
+            if (comment != null) {
+                comment.setUser_vote_type(null);
+            }
+        }
+        notifyDataSetChanged();
+    }
 
     class CommentViewHolder extends RecyclerView.ViewHolder {
         private final TextView authorTextView;

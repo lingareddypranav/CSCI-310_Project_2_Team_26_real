@@ -49,6 +49,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
     private OnPostDeletedListener deleteListener;
     private OnBookmarkToggleListener bookmarkToggleListener;
     private OnPostVoteListener voteListener;
+    private long sessionVersion = SessionManager.getSessionVersion();
 
     public PostsAdapter(OnPostClickListener clickListener) {
         this.clickListener = clickListener;
@@ -81,6 +82,11 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
+        long latestSession = SessionManager.getSessionVersion();
+        if (latestSession != sessionVersion) {
+            sessionVersion = latestSession;
+            clearLocalVoteSelections();
+        }
         Post post = items.get(position);
         if (post == null) {
             return;
@@ -90,6 +96,15 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
     @Override
     public int getItemCount() { return items.size(); }
+
+    private void clearLocalVoteSelections() {
+        for (Post post : items) {
+            if (post != null) {
+                post.setUser_vote_type(null);
+            }
+        }
+        notifyDataSetChanged();
+    }
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleTextView;
