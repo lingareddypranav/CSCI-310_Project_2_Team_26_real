@@ -97,6 +97,9 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
         private final TextView authorTextView;
         private final TextView dateTextView;
         private final TextView contentTextView;
+        private final TextView promptSectionTextView;
+        private final TextView descriptionSectionTextView;
+        private final View promptDivider;
         private final TextView upvoteTextView;
         private final TextView downvoteTextView;
         private final TextView commentCountTextView;
@@ -115,6 +118,9 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             authorTextView = itemView.findViewById(R.id.authorTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
             contentTextView = itemView.findViewById(R.id.contentTextView);
+            promptSectionTextView = itemView.findViewById(R.id.promptSectionTextView);
+            descriptionSectionTextView = itemView.findViewById(R.id.descriptionSectionTextView);
+            promptDivider = itemView.findViewById(R.id.promptDivider);
             upvoteTextView = itemView.findViewById(R.id.upvoteTextView);
             downvoteTextView = itemView.findViewById(R.id.downvoteTextView);
             commentCountTextView = itemView.findViewById(R.id.commentCountTextView);
@@ -162,9 +168,42 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
             // For prompt posts, show prompt + description preview; for regular posts, show content
             if (post.isIs_prompt_post()) {
-                contentTextView.setText(buildPromptPreview(post));
+                contentTextView.setVisibility(View.GONE);
+                if (promptSectionTextView != null) {
+                    if (post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
+                        promptSectionTextView.setText(post.getPrompt_section().trim());
+                        promptSectionTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        promptSectionTextView.setVisibility(View.GONE);
+                    }
+                }
+                if (descriptionSectionTextView != null) {
+                    if (post.getDescription_section() != null && !post.getDescription_section().trim().isEmpty()) {
+                        descriptionSectionTextView.setText(post.getDescription_section().trim());
+                        descriptionSectionTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        descriptionSectionTextView.setVisibility(View.GONE);
+                    }
+                }
+                if (promptDivider != null) {
+                    boolean showDivider = promptSectionTextView != null
+                            && promptSectionTextView.getVisibility() == View.VISIBLE
+                            && descriptionSectionTextView != null
+                            && descriptionSectionTextView.getVisibility() == View.VISIBLE;
+                    promptDivider.setVisibility(showDivider ? View.VISIBLE : View.GONE);
+                }
             } else {
+                contentTextView.setVisibility(View.VISIBLE);
                 contentTextView.setText(post.getContent() != null ? post.getContent() : "");
+                if (promptSectionTextView != null) {
+                    promptSectionTextView.setVisibility(View.GONE);
+                }
+                if (descriptionSectionTextView != null) {
+                    descriptionSectionTextView.setVisibility(View.GONE);
+                }
+                if (promptDivider != null) {
+                    promptDivider.setVisibility(View.GONE);
+                }
             }
 
             int upvotes = Math.max(post.getUpvotes(), 0);
@@ -184,6 +223,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
             if (upvoteButton != null) {
                 upvoteButton.setOnClickListener(v -> {
+                    applyLocalVote(post, "up");
                     if (voteListener != null) {
                         voteListener.onVote(post, "up");
                     }
@@ -191,6 +231,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
             if (downvoteButton != null) {
                 downvoteButton.setOnClickListener(v -> {
+                    applyLocalVote(post, "down");
                     if (voteListener != null) {
                         voteListener.onVote(post, "down");
                     }
@@ -264,6 +305,45 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
             }
         }
 
+        private void applyLocalVote(Post post, String type) {
+            if (post == null) return;
+
+            String currentVote = post.getUser_vote_type();
+            int upvotes = Math.max(post.getUpvotes(), 0);
+            int downvotes = Math.max(post.getDownvotes(), 0);
+            String newVote = type;
+
+            if ("up".equalsIgnoreCase(type)) {
+                if ("up".equalsIgnoreCase(currentVote)) {
+                    newVote = null;
+                    upvotes = Math.max(0, upvotes - 1);
+                } else {
+                    upvotes += 1;
+                    if ("down".equalsIgnoreCase(currentVote)) {
+                        downvotes = Math.max(0, downvotes - 1);
+                    }
+                }
+            } else if ("down".equalsIgnoreCase(type)) {
+                if ("down".equalsIgnoreCase(currentVote)) {
+                    newVote = null;
+                    downvotes = Math.max(0, downvotes - 1);
+                } else {
+                    downvotes += 1;
+                    if ("up".equalsIgnoreCase(currentVote)) {
+                        upvotes = Math.max(0, upvotes - 1);
+                    }
+                }
+            }
+
+            post.setUser_vote_type(newVote);
+            post.setUpvotes(upvotes);
+            post.setDownvotes(downvotes);
+
+            upvoteTextView.setText(numberFormat.format(upvotes));
+            downvoteTextView.setText(numberFormat.format(downvotes));
+            updateVoteIcons(newVote);
+        }
+
         private String formatDate(String dateString, Resources resources) {
             if (dateString == null || dateString.isEmpty()) {
                 return "";
@@ -298,23 +378,6 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHold
 
             // If all parsing fails, return formatted original string
             return dateString.length() > 10 ? dateString.substring(0, 10) : dateString;
-        }
-
-        private String buildPromptPreview(Post post) {
-            StringBuilder builder = new StringBuilder();
-            if (post.getPrompt_section() != null && !post.getPrompt_section().trim().isEmpty()) {
-                builder.append(post.getPrompt_section().trim());
-            }
-            if (post.getDescription_section() != null && !post.getDescription_section().trim().isEmpty()) {
-                if (builder.length() > 0) {
-                    builder.append("\n\n");
-                }
-                builder.append(post.getDescription_section().trim());
-            }
-            if (builder.length() == 0 && post.getContent() != null) {
-                builder.append(post.getContent());
-            }
-            return builder.toString();
         }
 
         private String formatRelativeTime(Date date, Resources resources) {
