@@ -2,7 +2,7 @@ package com.example.csci_310project2team26.data.repository;
 
 import com.example.csci_310project2team26.data.model.Post;
 import com.example.csci_310project2team26.data.network.ApiService;
-import com.example.csci_310project2team26.data.session.SessionManager;
+import com.example.csci_310project2team26.data.repository.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
