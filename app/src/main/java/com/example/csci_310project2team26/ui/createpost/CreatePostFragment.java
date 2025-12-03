@@ -47,6 +47,19 @@ public class CreatePostFragment extends Fragment {
         observeViewModel();
         observeDraftSelection();
 
+        // Ensure title field is visible and scrollable
+        if (binding.titleEditText != null) {
+            binding.titleEditText.post(() -> {
+                if (binding.titleEditText != null && binding.titleEditText.getParent() != null) {
+                    View parent = (View) binding.titleEditText.getParent();
+                    if (parent != null) {
+                        parent.requestFocus();
+                        binding.titleEditText.requestFocus();
+                    }
+                }
+            });
+        }
+
         return binding.getRoot();
     }
 
