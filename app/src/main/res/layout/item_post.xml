@@ -87,6 +87,18 @@
             android:focusable="false">
 
             <ImageButton
+                android:id="@+id/bookmarkButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_bookmark_border_24dp"
+                android:contentDescription="@string/add_bookmark"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:tint="@color/primary_text"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <ImageButton
                 android:id="@+id/deletePostButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
